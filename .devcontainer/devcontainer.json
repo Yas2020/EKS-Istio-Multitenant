@@ -1,0 +1,68 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
+{
+	"name": "EKS-Dev",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"dockerFile": "Dockerfile",
+	"context": "..",
+	"remoteUser": "Yas",
+	"workspaceFolder": "/home/project",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/home/project,type=bind,consistency=delegated",
+    "runArgs": ["-h","Yas"],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"VisualStudioExptTeam.vscodeintellicode",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"CucumberOpen.cucumber-official",
+				"yzhang.markdown-all-in-one",
+				"bierner.github-markdown-preview",
+				"hnw.vscode-auto-open-markdown-preview",
+				"DavidAnson.vscode-markdownlint",
+				"donjayamanne.githistory",
+				"GitHub.vscode-pull-request-github",
+				"hbenl.vscode-test-explorer",
+				"njpwerner.autodocstring",
+				"cstrap.flask-snippets",
+				"wholroyd.jinja",
+				"redhat.vscode-yaml",
+				"ms-azuretools.vscode-docker",
+				"streetsidesoftware.code-spell-checker",
+				"vivaxy.vscode-conventional-commits",
+				"dbaeumer.vscode-eslint",
+				"eamodio.gitlens",
+				"esbenp.prettier-vscode"
+			]
+		}
+	},
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"version": "latest",
+			"enableNonRootDocker": "true",
+			"moby": "true"
+		},
+		"ghcr.io/devcontainers/features/node:1": {
+			"nodeGypDependencies": true,
+			"version": "20",
+			"nvmVersion": "latest"
+		  },
+		"ghcr.io/devcontainers/features/aws-cli:1": {},
+		"ghcr.io/devcontainers-contrib/features/aws-cdk:2": {},
+		"ghcr.io/devcontainers/features/sshd:1": {},
+		"ghcr.io/devcontainers/features/terraform:1": {}
+	}
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "docker --version",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
