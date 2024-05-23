@@ -17,7 +17,7 @@ export class CdkStack extends cdk.Stack {
     super(scope, id, props);
 
     const mastersRole = new iam.Role(this, 'MastersRole', {
-      assumedBy: new cdk.aws_iam.ArnPrincipal("arn:aws:iam::xxxx:user/xxxx"), // change me!
+      assumedBy: new cdk.aws_iam.ArnPrincipal(`arn:aws:iam::${this.account}:user/YasCode`), 
     });
 
     const vpc = new ec2.Vpc(this, 'Vpc', { maxAzs: 2 })
@@ -29,7 +29,10 @@ export class CdkStack extends cdk.Stack {
       vpc,
       defaultCapacity: 0,
       version: eks.KubernetesVersion.V1_29,
-      kubectlLayer: new KubectlLayer(this, 'kubectl')
+      clusterName: 'initial', 
+      kubectlLayer: new KubectlLayer(this, 'kubectl'),
+      mastersRole: mastersRole,
+      outputConfigCommand: true,
     });
 
     const MngNodes = new ManagedNodeGroup(this, "EksManagedNodeGroup", {
