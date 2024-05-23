@@ -6,33 +6,28 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
 
-export interface EksManagedNodeGroupProps {
+export interface ManagedNodeGroupProps {
     cluster: eks.Cluster;
 }
 
-export class EksManagedNodeGroup extends Construct {
+export class ManagedNodeGroup extends Construct {
     constructor(
         scope: Construct,
         id: string,
-        props: EksManagedNodeGroupProps
+        props: ManagedNodeGroupProps
     ) {
         super(scope, id);
 
-        const nodeRole = new iam.Role(this, "EksNodeRole", {
-            assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-          });
-      
-          nodeRole.addManagedPolicy(
-            iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEKSWorkerNodePolicy")
-          );
-          nodeRole.addManagedPolicy(
-            iam.ManagedPolicy.fromAwsManagedPolicyName(
-              "AmazonEC2ContainerRegistryReadOnly"
-            )
-          );
-          nodeRole.addManagedPolicy(
-            iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore")
-          );
+        const nodeGroupRole = new iam.Role(this, 'nodeGroupRole', {
+          roleName: 'nodeGroupRole',
+          assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+          managedPolicies: [
+            iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKSWorkerNodePolicy'),
+            iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly'),
+            iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEKS_CNI_Policy'),
+          ],
+        });
+          
 
         
         props.cluster.addNodegroupCapacity('custom-node-group', {
@@ -45,7 +40,7 @@ export class EksManagedNodeGroup extends Construct {
             diskSize: 100,
             amiType: eks.NodegroupAmiType.AL2023_X86_64_STANDARD,
             capacityType: eks.CapacityType.SPOT, 
-            nodeRole: nodeRole,
+            nodeRole: nodeGroupRole,
         });
     }
 };
