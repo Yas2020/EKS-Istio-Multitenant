@@ -17,7 +17,7 @@ export class CdkStack extends cdk.Stack {
     super(scope, id, props);
 
     const mastersRole = new iam.Role(this, 'MastersRole', {
-      assumedBy: new cdk.aws_iam.ArnPrincipal("arn:aws:iam::253226449123:user/YasCode"), // change me!
+      assumedBy: new cdk.aws_iam.ArnPrincipal("arn:aws:iam::xxxx:user/xxxx"), // change me!
     });
 
     const vpc = new ec2.Vpc(this, 'Vpc', { maxAzs: 2 })
