@@ -1,0 +1,22 @@
+*.js
+!jest.config.js
+*.d.ts
+node_modules
+nodesource_setup.sh
+
+istio_ingress
+istio-ingress
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+cdk.context.json
+
+
+deploy-tenant-services.ts
+aws-load-balancer-controller.ts
+cluster-config.sh
+faiss-indicies
+certs
+istio-1.22.2
+policies/yaml_to_json.py
