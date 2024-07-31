@@ -22,7 +22,9 @@
     "strictPropertyInitialization": false,
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
   },
   "exclude": [
     "node_modules",

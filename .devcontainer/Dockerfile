@@ -18,8 +18,9 @@
             curl \
             wget \
             jq \
-            python3.12 python3-pip python3-wheel && \
-            update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
+            dnsutils\
+            python3.11-dev python3-pip && \
+            update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
             apt-get autoremove -y && \
             apt-get clean -y
 
@@ -38,10 +39,8 @@
     
     # Set up the Python development environment
     WORKDIR /home/project
-    RUN sudo apt update && \ 
-        sudo apt install python3-distutils 
-
-    RUN sudo apt install -y nodejs npm
+    RUN python3 -m pip install --upgrade pip && \
+        pip3 install --upgrade wheel 
  
     ENV PORT 8000
     EXPOSE $PORT

@@ -1,44 +1,59 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
-import * as eks from 'aws-cdk-lib/aws-eks';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as iam from 'aws-cdk-lib/aws-iam';
-
-import { KubectlLayer } from 'aws-cdk-lib/lambda-layer-kubectl';
+import { SystemConfig } from "./shared/types";
 import { ManagedNodeGroup } from "./infrastructure/node-groups";
+import { SvcAccountRoles } from "./infrastructure/svc-account-roles";
+import { IdProvider } from "./infrastructure/id-provider-cognito";
+import { IstioDeploy } from "./infrastructure/deploy-istio";
+import { Shared } from "./shared";
+import { ConfigAuth } from "./infrastructure/deploy-security"
+import { eksCluster } from "./infrastructure/cluster"
 
+export interface EksStackProps extends cdk.StackProps {
+  readonly config: SystemConfig;
+}
 
-
-export class CdkStack extends cdk.Stack {
-  constructor(scope: Construct, 
-              id: string, 
-              props?: cdk.StackProps) {
+export class EksStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: EksStackProps) {
     super(scope, id, props);
 
-    const mastersRole = new iam.Role(this, 'MastersRole', {
-      assumedBy: new cdk.aws_iam.ArnPrincipal(`arn:aws:iam::${this.account}:user/YasCode`), 
-    });
+    new IdProvider(this, 'openIdCProvider', {tenants: props.config.tenants});
+    const shared = new Shared(this, "Shared", { config: props.config });
 
-    const vpc = new ec2.Vpc(this, 'Vpc', { maxAzs: 2 })
-    // , { ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/16'), 
-    //                                         maxAzs: 2, 
-    //                                         natGateways: 2 });
-
-    const cluster = new eks.Cluster(this, 'Cluster', {
-      vpc,
-      defaultCapacity: 0,
-      version: eks.KubernetesVersion.V1_29,
-      clusterName: 'initial', 
-      kubectlLayer: new KubectlLayer(this, 'kubectl'),
-      mastersRole: mastersRole,
-      outputConfigCommand: true,
-    });
-
-    const MngNodes = new ManagedNodeGroup(this, "EksManagedNodeGroup", {
+    /* Provision a cluster & managed nodegroup */
+    const cluster = eksCluster(this, props.config, shared.vpc);
+    const nodeGroups = new ManagedNodeGroup(this, "EksManagedNodeGroup", {
       cluster: cluster,
+      sshKeyName: props.config.sshKeyName
+    });
+    
+    /* Provide access to AWS resources */
+    const svcAccountRoles = new SvcAccountRoles(this, 'IRSA', {
+      cluster: cluster,
+      tenants: props.config.tenants
     });
 
+    /* Deploy istio system - Helm */
+    const istioDeploy = new IstioDeploy(this, 'Istio-Deployment', {
+      version: props.config.ISTIO_VERSION,
+      cluster: cluster,
+      clusterName: props.config.EKS_CLUSTER_NAME
+    });
+    istioDeploy.node.addDependency(nodeGroups);
+      
+    /* 
+    Configure and deploy: 
+    1 - authn/authz pipeline and policies (envoy as reverse proxy, OAuth2 proxy per tenant) -CodeBuild
+    2 - single istio gateway, virtual services and the application per tenant - CodeBuild 
+    */
+    const securityConfig = new ConfigAuth(this, 'ConfigEnvoyOAuth2Proxies', {
+      config: props.config,
+      cluster,
+      envoySvcAccountRole: svcAccountRoles.envoySvcAccountRole,
+      appImageURL: shared.app_asset.imageUri,
+      ragRagImageURL: shared.api_asset.imageUri
+    });
+    securityConfig.node.addDependency(istioDeploy);
 
-  }
+  };
 }
