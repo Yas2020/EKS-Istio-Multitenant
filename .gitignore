@@ -20,3 +20,4 @@ faiss-indicies
 certs
 istio-1.22.2
 policies/yaml_to_json.py
+lib/.DS_Store
