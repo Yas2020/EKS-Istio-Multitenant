@@ -6,7 +6,7 @@ import * as eks from 'aws-cdk-lib/aws-eks';
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 import { Construct } from "constructs";
-import { SystemConfig } from "../shared/types";
+import { SystemConfig } from "./types";
 
 export interface ConfigAuthProps {
   config: SystemConfig;

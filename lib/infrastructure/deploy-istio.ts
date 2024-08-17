@@ -15,7 +15,7 @@ export class IstioDeploy extends Construct {
   constructor(scope: Construct, id: string, props: IstioDeployProps) {
     super(scope, id);
 
-    const policyFile = readFileSync("./policies/aws-load-balancer-controller.json", "utf-8");
+    const policyFile = readFileSync("./lib/policies/aws-load-balancer-controller.json", "utf-8");
     const albControllerPolicy = new iam.ManagedPolicy(this, "AWSLoadBalancerControllerIAMPolicy", {
       document: iam.PolicyDocument.fromJson(JSON.parse(policyFile))
     });
@@ -23,6 +23,7 @@ export class IstioDeploy extends Construct {
       name: "aws-load-balancer-controller",
       namespace: "kube-system",
     });
+    /* Grant permissions to AWS Load Balancer Controller to create and manage Load Balancers */
     albControllerSA.role.addManagedPolicy(albControllerPolicy);
 
     /* 
@@ -53,7 +54,7 @@ export class IstioDeploy extends Construct {
       timeout: cdk.Duration.minutes(5)
     });
 
-    /* Install cert manager, cert signers, CAs, TLS cert*/
+    /* Install cert manager, cert signers, CAs, TLS cert */
     new CertManager(this, 'CertManager', { version: 'v1.15.1', cluster: props.cluster});
 
     /*
@@ -239,5 +240,6 @@ export class IstioDeploy extends Construct {
     new cdk.CfnOutput(this, "LoadBalancerDomain", {
       value: hostname.value
     });
+    
   };
 };

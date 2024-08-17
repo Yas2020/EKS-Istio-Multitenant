@@ -18,6 +18,7 @@ aws-load-balancer-controller.ts
 cluster-config.sh
 faiss-indicies
 certs
-istio-1.22.2
+istio-*
 policies/yaml_to_json.py
 lib/.DS_Store
+.DS_Store

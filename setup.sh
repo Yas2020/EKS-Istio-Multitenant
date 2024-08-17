@@ -28,7 +28,7 @@ sudo apt-get install -y nodejs
 
 echo ""
 echo "-------------------------"
-echo "Node Version:"
+echo "      Node Version:"
 node -v
 echo "-------------------------"
 echo ""
@@ -39,7 +39,7 @@ echo "Installing AWS CDK Toolkit"
 sudo npm install -g aws-cdk@latest
 echo ""
 echo "-------------------------"
-echo "CDK Version:"
+echo "      CDK Version:"
 cdk --version
 echo "-------------------------"
 echo ""
@@ -71,7 +71,7 @@ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$P
 
 echo ""
 echo "-------------------------"
-echo "kubectl Version:"
+echo "    kubectl Version:"
 kubectl version --client=true
 echo "-------------------------"
 echo ""
@@ -90,7 +90,7 @@ sudo mv -v /tmp/eksctl /usr/local/bin
 
 echo ""
 echo "-------------------------"
-echo "eksctl Version:"
+echo "     eksctl Version:"
 eksctl version
 echo "-------------------------"
 echo ""
@@ -108,7 +108,7 @@ echo ""
 
 echo ""
 echo "-------------------------"
-echo "helm Version:"
+echo "      helm Version:"
 helm version
 echo "-------------------------"
 echo ""
@@ -128,9 +128,9 @@ echo ""
 
 
 echo ""
-echo "xxxxxxxxxxxxxxxxxxxxxxxxxx"
-echo "       Configure AWS         "
-echo "xxxxxxxxxxxxxxxxxxxxxxxxxx"
+echo "-------------------------"
+echo "       Configure AWS"
+echo "-------------------------"
 echo ""
 
 aws configure get region && echo AWS_REGION is "$AWS_REGION" || echo "configure AWS CLI \n" && aws configure
@@ -146,5 +146,38 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 export ACCOUNT_ID=$(aws sts get-caller-identity --output text --query Account) 
 echo "export ACCOUNT_ID=${ACCOUNT_ID}" \
     | tee -a ~/.bash_profile
+
+
+echo ""
+echo "-------------------------"
+echo "       GitOps Tools"
+echo "-------------------------"
+echo ""
+
+# Install Flux to communicate with Flux agaents and manage Flux resources in the cluster
+curl -s https://fluxcd.io/install.sh | sudo bash
+
+
+# Install GithubCli
+(type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+&& sudo mkdir -p -m 755 /etc/apt/keyrings \
+&& wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+&& sudo apt update \
+&& sudo apt install gh -y
+
+
+# Install kustomize
+curl --silent --location --remote-name \
+"https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.2.3/kustomize_kustomize.v3.2.3_linux_amd64" && \
+chmod a+x kustomize_kustomize.v3.2.3_linux_amd64 && \
+sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize
+
+# Install istioctl
+ISTIO_VERSION=1.23.0
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=$ISTIO_VERSION sh -
+export PATH=$PWD/$ISTIO_VERSION/bin:$PATH
+
 
 source ~/.bash_profile

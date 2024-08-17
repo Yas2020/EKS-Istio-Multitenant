@@ -1,5 +1,5 @@
 import * as eks from 'aws-cdk-lib/aws-eks';
-import { SystemConfig } from "../lib/shared/types";
+import { SystemConfig } from "../lib/infrastructure/types";
 import { existsSync, readFileSync } from "fs";
 
 export function getConfig(): SystemConfig {

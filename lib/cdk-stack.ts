@@ -1,12 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { SystemConfig } from "./shared/types";
+import { SystemConfig } from "./infrastructure/types";
 import { ManagedNodeGroup } from "./infrastructure/node-groups";
 import { SvcAccountRoles } from "./infrastructure/svc-account-roles";
 import { IdProvider } from "./infrastructure/id-provider-cognito";
 import { IstioDeploy } from "./infrastructure/deploy-istio";
-import { Shared } from "./shared";
-import { ConfigAuth } from "./infrastructure/deploy-security"
+import { Shared } from "./infrastructure/shared";
+import { ConfigAuth } from "./infrastructure/deploy-ext-auth"
 import { eksCluster } from "./infrastructure/cluster"
 
 export interface EksStackProps extends cdk.StackProps {

@@ -4,7 +4,7 @@ import * as eks from 'aws-cdk-lib/aws-eks';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { KubectlLayer } from 'aws-cdk-lib/lambda-layer-kubectl';
-import { SystemConfig } from "../shared/types";
+import { SystemConfig } from "./types";
 
 export function eksCluster (scope: Construct, config: SystemConfig, vpc: ec2.Vpc){
 
