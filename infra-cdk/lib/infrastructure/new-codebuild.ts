@@ -96,13 +96,6 @@ export class ConfigAuth extends Construct {
     });
     // cluster.awsAuth.addMastersRole(project1.role!);
 
-    project.addToRolePolicy(new iam.PolicyStatement({
-      actions: [
-        "codeconnections:GetConnectionToken",
-        "codeconnections:GetConnection"
-      ],
-      resources: ['arn:aws:codestar-connections:us-east-2:253226449123:connection/f86e9b40-c830-43fa-8ce2-1e18dab1f1a0'],
-    }));
 
     // project1.addToRolePolicy(new iam.PolicyStatement({
     //   actions: [
