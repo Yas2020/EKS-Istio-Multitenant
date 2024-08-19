@@ -1,0 +1,145 @@
+import * as cdk from "aws-cdk-lib";
+import * as codebuild from "aws-cdk-lib/aws-codebuild";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as eks from 'aws-cdk-lib/aws-eks';
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+
+import { Construct } from "constructs";
+import { SystemConfig } from "./types";
+
+export interface ConfigAuthProps {
+  config: SystemConfig;
+//   cluster: eks.Cluster
+//   envoySvcAccountRole: iam.Role;
+//   appImageURL: string,
+//   ragRagImageURL: string
+};
+
+export class ConfigAuth extends Construct {
+  constructor(scope: Construct, id: string, props: ConfigAuthProps) {
+    super(scope, id);
+    const {
+      config,
+    //   cluster,
+    //   envoySvcAccountRole,
+    //   appImageURL,
+    //   ragRagImageURL
+    } = props;
+
+    
+    const buildSpec1 = codebuild.BuildSpec.fromObject({
+      version: "0.2",
+      phases: {
+        // install: {
+        //   commands: [
+        //     'echo "Updating system packages..."',
+        //     "sudo apt-get update",
+        //     'echo "Installing awscli"',
+        //     "apt-get install -y awscli",
+        //     'echo "Installing kubectl..."',
+        //     'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
+        //     'chmod +x ./kubectl',
+        //     'echo "kubectl Version:"',
+        //     'kubectl version --client=true',
+        //     'echo "Installing helm"',
+        //     'curl --no-progress-meter \
+        //       -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
+        //     'echo "helm Version:"',
+        //     'helm version',
+        //   ],
+        // },
+        // pre_build: {
+        //   commands: [
+        //     'echo "Clonning github repo..."',
+        //     "git clone https://github.com/Yas2020/EKS-Istio-Multitenant.git",
+        //   ],
+        // },
+        build: {
+          commands: [
+            "ls -al",
+            "git remote set-url origin https://Yas2020:$PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
+            "git config --global user.name Yas2020",
+            "git config --global user.email yas.eftekhari@gmail.com",
+            "touch dum.txt",
+            "git add dum.txt",
+            "git commit -m 'codebuild test'",
+            "git push",
+          ],
+        },
+      },
+    });
+
+    // // CodeBuild project
+    const project = new codebuild.Project(this, "CodeBuildProject", {
+      buildSpec: buildSpec1,
+      source: codebuild.Source.gitHub({
+        owner: 'Yas2020',
+        repo: 'EKS-Istio-Multitenant',
+        cloneDepth: 0,
+      }),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+        computeType: codebuild.ComputeType.SMALL,
+      },
+      environmentVariables: {
+        AWS_REGION: {
+          value: cdk.Stack.of(this).region
+        },
+        ISTIO_VERSION: {
+          value: config.ISTIO_VERSION
+        },
+        PAT: {
+            value: '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'
+          },
+      },
+    });
+    // cluster.awsAuth.addMastersRole(project1.role!);
+
+    project.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "codeconnections:GetConnectionToken",
+        "codeconnections:GetConnection"
+      ],
+      resources: ['arn:aws:codestar-connections:us-east-2:253226449123:connection/f86e9b40-c830-43fa-8ce2-1e18dab1f1a0'],
+    }));
+
+    // project1.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "cognito-idp:DescribeUserPoolDomain",
+    //     "cognito-idp:ListUserPoolClients",
+    //     "cognito-idp:DescribeUserPoolClient"
+    //   ],
+    //   resources: ['*'],
+    // }));
+
+    // cluster.awsAuth.addMastersRole(project2.role!);
+
+    // project2.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "eks:DescribeNodegroup",
+    //     "eks:DescribeUpdate",
+    //     "eks:DescribeCluster"
+    //   ],
+    //   resources: [cluster.clusterArn],
+    // }));
+
+    // project2.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "cognito-idp:DescribeUserPoolDomain",
+    //     "cognito-idp:ListUserPoolClients",
+    //     "cognito-idp:DescribeUserPoolClient"
+    //   ],
+    //   resources: ['*'],
+    // }));
+
+    // project2.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "cognito-idp:DescribeUserPoolDomain",
+    //     "cognito-idp:ListUserPoolClients",
+    //     "cognito-idp:DescribeUserPoolClient"
+    //   ],
+    //   resources: ['*'],
+    // }));
+  }
+}

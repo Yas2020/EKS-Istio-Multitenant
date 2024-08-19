@@ -54,8 +54,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: image-build/${{ matrix.apps }}
-          file: image-build/${{ matrix.apps }}/Dockerfile
+          context: app/${{ matrix.apps }}
+          file: app/${{ matrix.apps }}/Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
             APP_VERSION=${{ steps.set-variables.outputs.VERSION }}
