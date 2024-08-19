@@ -90,7 +90,7 @@ export class ConfigAuth extends Construct {
           value: config.ISTIO_VERSION
         },
         PAT: {
-            value: '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'
+            value: ''
           },
       },
     });
