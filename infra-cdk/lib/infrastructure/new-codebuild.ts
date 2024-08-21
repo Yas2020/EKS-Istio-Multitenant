@@ -7,6 +7,7 @@ import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 import { Construct } from "constructs";
 import { SystemConfig } from "./types";
+import { Secret } from "aws-cdk-lib/aws-batch";
 
 export interface ConfigAuthProps {
   config: SystemConfig;
@@ -27,57 +28,72 @@ export class ConfigAuth extends Construct {
     //   ragRagImageURL
     } = props;
 
+    /* 
+    Create a github personal access token (named 'GitHub-PAT' in my case) and save 
+    it as a secret at secret manager. This secret will be used by codebuild to call github api.
+    To create a codebuild credential that can be refered by multiple projects, you can use
+    new codebuild.GitHubSourceCredentials(this, 'CodeBuildGitHubCreds', {
+      accessToken: cdk.SecretValue.secretsManager('GitHub-PAT'),
+    });
+    */ 
     
     const buildSpec1 = codebuild.BuildSpec.fromObject({
       version: "0.2",
       phases: {
-        // install: {
-        //   commands: [
-        //     'echo "Updating system packages..."',
-        //     "sudo apt-get update",
-        //     'echo "Installing awscli"',
-        //     "apt-get install -y awscli",
-        //     'echo "Installing kubectl..."',
-        //     'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
-        //     'chmod +x ./kubectl',
-        //     'echo "kubectl Version:"',
-        //     'kubectl version --client=true',
-        //     'echo "Installing helm"',
-        //     'curl --no-progress-meter \
-        //       -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
-        //     'echo "helm Version:"',
-        //     'helm version',
-        //   ],
-        // },
+        install: {
+          commands: [
+            'echo "Updating system packages..."',
+            "sudo apt-get update",
+            'echo "Installing awscli"',
+            "apt-get install -y awscli",
+            'echo "Installing kubectl..."',
+            'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
+            'chmod +x ./kubectl',
+            'echo "kubectl Version:"',
+            'kubectl version --client=true',
+            'echo "Installing helm"',
+            'curl --no-progress-meter \
+              -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
+            'echo "helm Version:"',
+            'helm version',
+            'echo "Installing Flux"',
+            'curl -s https://fluxcd.io/install.sh | sudo bash',
+            'echo "Installing kustomize"',
+            'curl --silent --location --remote-name \
+"https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.2.3/kustomize_kustomize.v3.2.3_linux_amd64" && \
+chmod a+x kustomize_kustomize.v3.2.3_linux_amd64 && \
+sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
+          ],
+        },
         // pre_build: {
         //   commands: [
         //     'echo "Clonning github repo..."',
-        //     "git clone https://github.com/Yas2020/EKS-Istio-Multitenant.git",
+        //     // "git clone https://github.com/Yas2020/EKS-Istio-Multitenant.git",
         //   ],
         // },
         build: {
           commands: [
             "ls -al",
-            "git remote set-url origin https://Yas2020:$PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
-            "git config --global user.name Yas2020",
+            "git config --global user.name CodeBuild",
             "git config --global user.email yas.eftekhari@gmail.com",
-            "touch dum.txt",
-            "git add dum.txt",
-            "git commit -m 'codebuild test'",
-            "git push",
+            "git remote set-url origin https://Yas2020:$GitHub_PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
+            "git config -l",
+            "bash infra-cdk/deploy-flux.sh",
+            // "git add dum.txt",
+            // "git commit -m 'codebuild test'",
+            // "git push --dry-run",
           ],
         },
       },
     });
 
-    // // CodeBuild project
+    // CodeBuild project
     const project = new codebuild.Project(this, "CodeBuildProject", {
       buildSpec: buildSpec1,
       source: codebuild.Source.gitHub({
         owner: 'Yas2020',
         repo: 'EKS-Istio-Multitenant',
-        cloneDepth: 0,
-      }),
+      }),      
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         computeType: codebuild.ComputeType.SMALL,
@@ -89,11 +105,14 @@ export class ConfigAuth extends Construct {
         ISTIO_VERSION: {
           value: config.ISTIO_VERSION
         },
-        PAT: {
-            value: ''
-          },
+        GitHub_PAT: {
+          type: codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,
+          value: 'GitHub-PAT:GitHub-PAT',
+        },
       },
     });
+
+
     // cluster.awsAuth.addMastersRole(project1.role!);
 
 

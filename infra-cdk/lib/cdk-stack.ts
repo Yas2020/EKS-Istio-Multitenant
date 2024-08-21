@@ -1,13 +1,13 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { SystemConfig } from "./infrastructure/types";
-// import { ManagedNodeGroup } from "./infrastructure/node-groups";
-// import { SvcAccountRoles } from "./infrastructure/svc-account-roles";
-// import { IdProvider } from "./infrastructure/id-provider-cognito";
-// import { IstioDeploy } from "./infrastructure/deploy-istio";
-// import { Shared } from "./infrastructure/shared";
+import { ManagedNodeGroup } from "./infrastructure/node-groups";
+import { SvcAccountRoles } from "./infrastructure/svc-account-roles";
+import { IdProvider } from "./infrastructure/id-provider-cognito";
+import { IstioDeploy } from "./infrastructure/deploy-istio";
+import { Shared } from "./infrastructure/shared";
 // import { ConfigAuth } from "./infrastructure/deploy-ext-auth"
-// import { eksCluster } from "./infrastructure/cluster"
+import { eksCluster } from "./infrastructure/cluster"
 import { ConfigAuth } from "./infrastructure/new-codebuild"
 
 export interface EksStackProps extends cdk.StackProps {
@@ -18,7 +18,7 @@ export class EksStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: EksStackProps) {
     super(scope, id, props);
 
-    // new IdProvider(this, 'openIdCProvider', {tenants: props.config.tenants});
+    new IdProvider(this, 'openIdCProvider', {tenants: props.config.tenants});
     // const shared = new Shared(this, "Shared", { config: props.config });
 
     // /* Provision a cluster & managed nodegroup */
