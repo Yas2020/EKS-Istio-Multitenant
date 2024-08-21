@@ -85,47 +85,4 @@ export class CertManager extends Construct {
         });
         cert_signer.node.addDependency(cert);
     };
-
-    const tls_issuer = props.cluster.addManifest('gateway-issuer', {
-        apiVersion: "cert-manager.io/v1",
-        kind: "Issuer",
-        metadata: {
-            name: "gateway-issuer",
-            namespace: "istio-ingress"
-        },
-        spec: {
-            selfSigned: {}
-        }
-    });
-    tls_issuer.node.addDependency(certManager);
-
-    const tls_cert = props.cluster.addManifest('gateway-tls-cert', {
-        apiVersion: "cert-manager.io/v1",
-        kind: "Certificate",
-        metadata: {
-            name: "gateway-tls",
-            namespace: "istio-ingress"
-        },
-        spec: {
-            isCA: true,
-            duration: "8760h", 
-            commonName: "example.com",
-            secretName: "gateway-ca-tls",
-            privateKey: {
-                algorithm: "ECDSA",
-                size: 256
-            },                 
-            issuerRef: {
-                name: "gateway-issuer",
-                kind: "Issuer",
-                group: "cert-manager.io"
-            },
-            dnsNames: [
-                "example.com",
-                "tenanta.example.com",
-                "tenantb.example.com"
-            ]
-        }
-    });
-    tls_cert.node.addDependency(tls_issuer);
 }};

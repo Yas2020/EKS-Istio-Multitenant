@@ -73,9 +73,10 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
         },
         build: {
           commands: [
-            'git pull',
             'echo "Bootstraping Flux into the cluster..."',
             "bash infra-cdk/code-build/deploy-flux.sh",
+            'ls ./flux-cd/clusters/dev/',
+            'git pull',
             'git add flux-cd',
             'git commit -m "source repo configured"',
             'git push'
