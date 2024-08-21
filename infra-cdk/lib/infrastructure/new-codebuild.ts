@@ -78,7 +78,10 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
             "git config --global user.email yas.eftekhari@gmail.com",
             "git remote set-url origin https://Yas2020:$GitHub_PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
             "git config -l",
-            "bash infra-cdk/deploy-flux.sh",
+            "bash infra-cdk/codeBuild/deploy-flux.sh",
+            'git add flux-cd',
+            'git commit -m "flux-cd folder created"',
+            'git push'
             // "git add dum.txt",
             // "git commit -m 'codebuild test'",
             // "git push --dry-run",
@@ -116,14 +119,14 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
     // cluster.awsAuth.addMastersRole(project1.role!);
 
 
-    // project1.addToRolePolicy(new iam.PolicyStatement({
-    //   actions: [
-    //     "cognito-idp:DescribeUserPoolDomain",
-    //     "cognito-idp:ListUserPoolClients",
-    //     "cognito-idp:DescribeUserPoolClient"
-    //   ],
-    //   resources: ['*'],
-    // }));
+    project.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "cognito-idp:DescribeUserPoolDomain",
+        "cognito-idp:ListUserPoolClients",
+        "cognito-idp:DescribeUserPoolClient"
+      ],
+      resources: ['*'],
+    }));
 
     // cluster.awsAuth.addMastersRole(project2.role!);
 

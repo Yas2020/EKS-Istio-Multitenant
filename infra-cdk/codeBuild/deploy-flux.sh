@@ -314,10 +314,10 @@ cat kustomization.yaml
 cd ../..
 mkdir -p /clusters/dev
 
-cd ..
-git add flux-cd
-git commit -m 'flux folders created'
-git push
+# cd ..
+# git add flux-cd
+# git commit -m 'flux folders created'
+# git push
 
 
 # # Allow to interact with Cluster using kubectl
