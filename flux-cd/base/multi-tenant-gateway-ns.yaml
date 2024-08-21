@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: multi-tenant-gateway-ns
+spec: {}
+status: {}
