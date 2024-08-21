@@ -31,6 +31,15 @@
 	},
 
 	"features": {
+		"common": {
+			"username": "automatic",
+			"uid": "automatic",
+			"gid": "automatic",
+			"installZsh": true,
+			"installOhMyZsh": true,
+			"upgradePackages": true,
+			"nonFreePackages": false
+		},
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"version": "latest",
 			"enableNonRootDocker": "true",

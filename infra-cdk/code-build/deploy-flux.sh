@@ -1,3 +1,4 @@
+#!/usr/bin/bash
 
 # Allow to interact with Cluster using kubectl
 echo "Updating kube-config..."
