@@ -286,7 +286,7 @@ kustomize create --autodetect
 cat kustomization.yaml
 
 cd ..
-mkdir -p /overlays/dev && cd /overlays/dev
+mkdir -p ./overlays/dev && cd ./overlays/dev
 
 # do a for loop for tenants
 kubectl create namespace tenanta-ns --dry-run=client -o yaml > tenanta-ns.yaml
@@ -312,7 +312,7 @@ EOF
 cat kustomization.yaml
 
 cd ../..
-mkdir -p /clusters/dev
+mkdir -p ./clusters/dev
 
 # cd ..
 # git add flux-cd
