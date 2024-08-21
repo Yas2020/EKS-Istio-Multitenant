@@ -42,15 +42,15 @@ export class ConfigAuth extends Construct {
       phases: {
         install: {
           commands: [
-            'echo "Updating system packages..."',
-            "sudo apt-get update",
-            'echo "Installing awscli"',
-            "apt-get install -y awscli",
-            'echo "Installing kubectl..."',
-            'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
-            'chmod +x ./kubectl',
-            'echo "kubectl Version:"',
-            'kubectl version --client=true',
+            // 'echo "Updating system packages..."',
+            // "sudo apt-get update",
+            // 'echo "Installing awscli"',
+            // "apt-get install -y awscli",
+            // 'echo "Installing kubectl..."',
+            // 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
+            // 'chmod +x ./kubectl',
+            // 'echo "kubectl Version:"',
+            // 'kubectl version --client=true',
             // 'echo "Installing helm"',
             // 'curl --no-progress-meter \
             //   -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
@@ -77,16 +77,12 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
             "git config --global user.name CodeBuild",
             "git config --global user.email yas.eftekhari@gmail.com",
             "git remote set-url origin https://Yas2020:$GitHub_PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
-            "git config -l",
+            // "git config -l",
             "bash infra-cdk/code-build/deploy-flux.sh",
-            'mkdir -p flux-cd/clusters/dev',
-            "ls -al",
             'git add flux-cd',
             'git commit -m "flux-cd folder created"',
             'git push'
-            // "git add dum.txt",
-            // "git commit -m 'codebuild test'",
-            // "git push --dry-run",
+            
           ],
         },
       },

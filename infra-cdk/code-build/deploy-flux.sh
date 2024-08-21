@@ -312,6 +312,7 @@ EOF
 cat kustomization.yaml
 
 mkdir -p ../../clusters/dev
+touch ../../clusters/dev/.gitkeep
 
 # cd ..
 # git add flux-cd
