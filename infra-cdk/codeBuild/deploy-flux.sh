@@ -311,8 +311,7 @@ EOF
 # view the kustomization.yaml file
 cat kustomization.yaml
 
-cd ../..
-mkdir -p ./clusters/dev
+mkdir -p ../../clusters/dev
 
 # cd ..
 # git add flux-cd
