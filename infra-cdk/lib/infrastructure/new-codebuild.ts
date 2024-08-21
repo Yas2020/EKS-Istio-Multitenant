@@ -51,13 +51,13 @@ export class ConfigAuth extends Construct {
             'chmod +x ./kubectl',
             'echo "kubectl Version:"',
             'kubectl version --client=true',
-            'echo "Installing helm"',
-            'curl --no-progress-meter \
-              -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
-            'echo "helm Version:"',
-            'helm version',
-            'echo "Installing Flux"',
-            'curl -s https://fluxcd.io/install.sh | sudo bash',
+            // 'echo "Installing helm"',
+            // 'curl --no-progress-meter \
+            //   -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
+            // 'echo "helm Version:"',
+            // 'helm version',
+            // 'echo "Installing Flux"',
+            // 'curl -s https://fluxcd.io/install.sh | sudo bash',
             'echo "Installing kustomize"',
             'curl --silent --location --remote-name \
 "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.2.3/kustomize_kustomize.v3.2.3_linux_amd64" && \
@@ -78,7 +78,7 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
             "git config --global user.email yas.eftekhari@gmail.com",
             "git remote set-url origin https://Yas2020:$GitHub_PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
             "git config -l",
-            "bash infra-cdk/codeBuild/deploy-flux.sh",
+            "bash infra-cdk/code-build/deploy-flux.sh",
             "ls -al",
             'git add flux-cd',
             'git commit -m "flux-cd folder created"',
