@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- tenanta-ns.yaml
+- tenantb-ns.yaml
+- ../../base
+images:
+- name: ghcr.io/yas2020/eks-istio-multitenant/app-ui
+  newName: ghcr.io/yas2020/eks-istio-multitenant/app-ui # {"$imagepolicy": "flux-system:store-front:name"}
+  newTag: 0.0.1 # {"$imagepolicy": "flux-system:store-front:tag"}
+- name: ghcr.io/yas2020/eks-istio-multitenant/rag-api
+  newName: ghcr.io/yas2020/eks-istio-multitenant/rag-api # {"$imagepolicy": "flux-system:store-front:name"}
+  newTag: 0.0.1 # {"$imagepolicy": "flux-system:store-front:tag"}
