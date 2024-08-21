@@ -79,6 +79,7 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
             "git remote set-url origin https://Yas2020:$GitHub_PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
             "git config -l",
             "bash infra-cdk/codeBuild/deploy-flux.sh",
+            "ls -al",
             'git add flux-cd',
             'git commit -m "flux-cd folder created"',
             'git push'

@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 
-mkdir -p /flux-cd/base && cd /flux-cd/base
+mkdir -p ./flux-cd/base && cd ./flux-cd/base
 
-# echo "Updating kube-config..."
+echo "Current directory $PWD"
 # aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
 
 echo "Creating manifest for gateway"
