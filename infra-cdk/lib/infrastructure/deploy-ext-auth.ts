@@ -12,8 +12,8 @@ export interface ConfigAuthProps {
   config: SystemConfig;
   cluster: eks.Cluster
   envoySvcAccountRole: iam.Role;
-  appImageURL: string,
-  ragRagImageURL: string
+  // appImageURL: string,
+  // ragRagImageURL: string
 };
 
 export class ConfigAuth extends Construct {
@@ -23,26 +23,26 @@ export class ConfigAuth extends Construct {
       config,
       cluster,
       envoySvcAccountRole,
-      appImageURL,
-      ragRagImageURL
+      // appImageURL,
+      // ragRagImageURL
     } = props;
 
-    const buildBucket = new s3.Bucket(this, "buildBucket", {
-      bucketName: `build-bucket-${cdk.Stack.of(this).node.addr.slice(0,5)}`,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      autoDeleteObjects: true,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      enforceSSL: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    // const buildBucket = new s3.Bucket(this, "buildBucket", {
+    //   bucketName: `build-bucket-${cdk.Stack.of(this).node.addr.slice(0,5)}`,
+    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    //   autoDeleteObjects: true,
+    //   encryption: s3.BucketEncryption.S3_MANAGED,
+    //   enforceSSL: true,
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    // });
 
-    // Upload build code to S3
-    new s3deploy.BucketDeployment(this, "Script", {
-      sources: [s3deploy.Source.asset("./codeBuild")],
-      retainOnDelete: false,
-      destinationBucket: buildBucket,
-      destinationKeyPrefix: "scripts",
-    });
+    // // Upload build code to S3
+    // new s3deploy.BucketDeployment(this, "Script", {
+    //   sources: [s3deploy.Source.asset("./codeBuild")],
+    //   retainOnDelete: false,
+    //   destinationBucket: buildBucket,
+    //   destinationKeyPrefix: "scripts",
+    // });
 
     const buildSpec1 = codebuild.BuildSpec.fromObject({
       version: "0.2",
@@ -65,18 +65,18 @@ export class ConfigAuth extends Construct {
             'helm version',
           ],
         },
-        pre_build: {
-          commands: [
-            'echo "Downloading build code from S3..."',
-            "aws s3 cp s3://$BUILD_BUCKET/scripts/ ./build --recursive",
-            "ls -al",
-            "ls -al ./build",
-          ],
-        },
+        // pre_build: {
+        //   commands: [
+        //     'echo "Downloading build code from S3..."',
+        //     "aws s3 cp s3://$BUILD_BUCKET/scripts/ ./build --recursive",
+        //     "ls -al",
+        //     "ls -al ./build",
+        //   ],
+        // },
         build: {
           commands: [
             'echo "Configuring istio proxies..."',
-            "bash build/configure-proxies.sh",
+            "bash infra-cdk/code-build/configure-proxies.sh",
             'echo "istio proxies configured!"',
           ],
         },
@@ -86,6 +86,10 @@ export class ConfigAuth extends Construct {
     // CodeBuild project
     const project1 = new codebuild.Project(this, "CodeBuildProject", {
       buildSpec: buildSpec1,
+      source: codebuild.Source.gitHub({
+        owner: 'Yas2020',
+        repo: 'EKS-Istio-Multitenant',
+      }),
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         computeType: codebuild.ComputeType.SMALL,
@@ -94,12 +98,16 @@ export class ConfigAuth extends Construct {
         AWS_REGION: {
           value: cdk.Stack.of(this).region
         },
+        GitHub_PAT: {
+          type: codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,
+          value: 'GitHub-PAT:GitHub-PAT',
+        },
         ISTIO_VERSION: {
           value: config.ISTIO_VERSION
         },
-        BUILD_BUCKET: {
-          value: buildBucket.bucketName,
-        },
+        // BUILD_BUCKET: {
+        //   value: buildBucket.bucketName,
+        // },
         ENVOY_CONFIG_BUCKET: {
           value: `envoy-config-${cdk.Stack.of(this).node.addr.slice(0,5)}`
         },
@@ -112,84 +120,84 @@ export class ConfigAuth extends Construct {
       },
     });
 
-    const buildSpec2 = codebuild.BuildSpec.fromObject({
-      version: "0.2",
-      phases: {
-        install: {
-          commands: [
-            'echo "Updating system packages..."',
-            "sudo apt-get update",
-            'echo "Installing curl, wget, jq, tar, awscli"',
-            "apt-get install -y curl wget jq tar awscli",
-            'echo "Installing kubectl..."',
-            'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
-            'chmod +x ./kubectl',
-            'echo "kubectl Version:"',
-            'kubectl version --client=true',
-          ],
-        },
-        pre_build: {
-          commands: [
-            'echo "Downloading build code from S3..."',
-            "aws s3 cp s3://$BUILD_BUCKET/scripts/ ./build --recursive",
-            "ls -al",
-            "ls -al ./build",
-          ],
-        },
-        build: {
-          commands: [
-            'echo "Configuring istio..."',
-            "bash build/deploy-tenant-services.sh",
-            'echo "istio configured!"',
-          ],
-        },
-      },
-    });
+    // const buildSpec2 = codebuild.BuildSpec.fromObject({
+    //   version: "0.2",
+    //   phases: {
+    //     install: {
+    //       commands: [
+    //         'echo "Updating system packages..."',
+    //         "sudo apt-get update",
+    //         'echo "Installing curl, wget, jq, tar, awscli"',
+    //         "apt-get install -y curl wget jq tar awscli",
+    //         'echo "Installing kubectl..."',
+    //         'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
+    //         'chmod +x ./kubectl',
+    //         'echo "kubectl Version:"',
+    //         'kubectl version --client=true',
+    //       ],
+    //     },
+    //     pre_build: {
+    //       commands: [
+    //         'echo "Downloading build code from S3..."',
+    //         "aws s3 cp s3://$BUILD_BUCKET/scripts/ ./build --recursive",
+    //         "ls -al",
+    //         "ls -al ./build",
+    //       ],
+    //     },
+    //     build: {
+    //       commands: [
+    //         'echo "Configuring istio..."',
+    //         "bash build/deploy-tenant-services.sh",
+    //         'echo "istio configured!"',
+    //       ],
+    //     },
+    //   },
+    // });
   
-    const project2 = new codebuild.Project(this, "CodeBuildProject2", {
-      buildSpec: buildSpec2,
-      environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
-        computeType: codebuild.ComputeType.SMALL,
-      },
-      environmentVariables: {
-        ACCOUNT_ID: {
-          value: cdk.Stack.of(this).account
-        },
-        AWS_REGION: {
-          value: cdk.Stack.of(this).region
-        },
-        RANDOM_STRING: {
-          value: cdk.Stack.of(this).node.addr.slice(0,5)
-        },
-        BUILD_BUCKET: {
-          value: buildBucket.bucketName,
-        },
-        ENVOY_CONFIG_BUCKET: {
-          value: `envoy-config-${cdk.Stack.of(this).node.addr.slice(0,5)}`
-        },
-        EKS_CLUSTER_NAME: {
-          value: cluster.clusterName
-        },
-        CHATBOT_IMAGE_URI: {
-          value: appImageURL               
-        },
-        RAGAPI_IMAGE_URI: {
-          value: ragRagImageURL
-        },
-        TEXT2TEXT_MODEL_ID: {
-          value: config.TEXT2TEXT_MODEL_ID
-        },
-        EMBEDDING_MODEL_ID: {
-          value: config.EMBEDDING_MODEL_ID
-        },
-        BEDROCK_SERVICE: {
-          value: config.BEDROCK_SERVICE
-        }
-      },
-    });
+    // const project2 = new codebuild.Project(this, "CodeBuildProject2", {
+    //   buildSpec: buildSpec2,
+    //   environment: {
+    //     buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+    //     computeType: codebuild.ComputeType.SMALL,
+    //   },
+    //   environmentVariables: {
+    //     ACCOUNT_ID: {
+    //       value: cdk.Stack.of(this).account
+    //     },
+    //     AWS_REGION: {
+    //       value: cdk.Stack.of(this).region
+    //     },
+    //     RANDOM_STRING: {
+    //       value: cdk.Stack.of(this).node.addr.slice(0,5)
+    //     },
+    //     BUILD_BUCKET: {
+    //       value: buildBucket.bucketName,
+    //     },
+    //     ENVOY_CONFIG_BUCKET: {
+    //       value: `envoy-config-${cdk.Stack.of(this).node.addr.slice(0,5)}`
+    //     },
+    //     EKS_CLUSTER_NAME: {
+    //       value: cluster.clusterName
+    //     },
+    //     CHATBOT_IMAGE_URI: {
+    //       value: appImageURL               
+    //     },
+    //     RAGAPI_IMAGE_URI: {
+    //       value: ragRagImageURL
+    //     },
+    //     TEXT2TEXT_MODEL_ID: {
+    //       value: config.TEXT2TEXT_MODEL_ID
+    //     },
+    //     EMBEDDING_MODEL_ID: {
+    //       value: config.EMBEDDING_MODEL_ID
+    //     },
+    //     BEDROCK_SERVICE: {
+    //       value: config.BEDROCK_SERVICE
+    //     }
+    //   },
+    // });
       
-    buildBucket.grantReadWrite(project1.role!);
+    // buildBucket.grantReadWrite(project1.role!);
     cluster.awsAuth.addMastersRole(project1.role!);
 
     project1.addToRolePolicy(new iam.PolicyStatement({
@@ -210,34 +218,34 @@ export class ConfigAuth extends Construct {
       resources: ['*'],
     }));
 
-    buildBucket.grantReadWrite(project2.role!);
-    cluster.awsAuth.addMastersRole(project2.role!);
+    // buildBucket.grantReadWrite(project2.role!);
+    // cluster.awsAuth.addMastersRole(project2.role!);
 
-    project2.addToRolePolicy(new iam.PolicyStatement({
-      actions: [
-        "eks:DescribeNodegroup",
-        "eks:DescribeUpdate",
-        "eks:DescribeCluster"
-      ],
-      resources: [cluster.clusterArn],
-    }));
+    // project2.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "eks:DescribeNodegroup",
+    //     "eks:DescribeUpdate",
+    //     "eks:DescribeCluster"
+    //   ],
+    //   resources: [cluster.clusterArn],
+    // }));
 
-    project2.addToRolePolicy(new iam.PolicyStatement({
-      actions: [
-        "cognito-idp:DescribeUserPoolDomain",
-        "cognito-idp:ListUserPoolClients",
-        "cognito-idp:DescribeUserPoolClient"
-      ],
-      resources: ['*'],
-    }));
+    // project2.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "cognito-idp:DescribeUserPoolDomain",
+    //     "cognito-idp:ListUserPoolClients",
+    //     "cognito-idp:DescribeUserPoolClient"
+    //   ],
+    //   resources: ['*'],
+    // }));
 
-    project2.addToRolePolicy(new iam.PolicyStatement({
-      actions: [
-        "cognito-idp:DescribeUserPoolDomain",
-        "cognito-idp:ListUserPoolClients",
-        "cognito-idp:DescribeUserPoolClient"
-      ],
-      resources: ['*'],
-    }));
+    // project2.addToRolePolicy(new iam.PolicyStatement({
+    //   actions: [
+    //     "cognito-idp:DescribeUserPoolDomain",
+    //     "cognito-idp:ListUserPoolClients",
+    //     "cognito-idp:DescribeUserPoolClient"
+    //   ],
+    //   resources: ['*'],
+    // }));
   }
 }

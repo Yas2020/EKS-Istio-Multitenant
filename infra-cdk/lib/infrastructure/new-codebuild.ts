@@ -7,30 +7,23 @@ import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 import { Construct } from "constructs";
 import { SystemConfig } from "./types";
-import { Secret } from "aws-cdk-lib/aws-batch";
 
-export interface ConfigAuthProps {
+export interface ConfigFluxProps {
   config: SystemConfig;
-//   cluster: eks.Cluster
-//   envoySvcAccountRole: iam.Role;
-//   appImageURL: string,
-//   ragRagImageURL: string
+  cluster: eks.Cluster
 };
 
-export class ConfigAuth extends Construct {
-  constructor(scope: Construct, id: string, props: ConfigAuthProps) {
+export class ConfigFlux extends Construct {
+  constructor(scope: Construct, id: string, props: ConfigFluxProps) {
     super(scope, id);
     const {
       config,
-    //   cluster,
-    //   envoySvcAccountRole,
-    //   appImageURL,
-    //   ragRagImageURL
+      cluster,
     } = props;
 
     /* 
     Create a github personal access token (named 'GitHub-PAT' in my case) and save 
-    it as a secret at secret manager. This secret will be used by codebuild to call github api.
+    it as a secret in Secret Manager. This secret will be used by codebuild to call github api.
     To create a codebuild credential that can be refered by multiple projects, you can use
     new codebuild.GitHubSourceCredentials(this, 'CodeBuildGitHubCreds', {
       accessToken: cdk.SecretValue.secretsManager('GitHub-PAT'),
@@ -42,22 +35,22 @@ export class ConfigAuth extends Construct {
       phases: {
         install: {
           commands: [
-            // 'echo "Updating system packages..."',
-            // "sudo apt-get update",
-            // 'echo "Installing awscli"',
-            // "apt-get install -y awscli",
-            // 'echo "Installing kubectl..."',
-            // 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
-            // 'chmod +x ./kubectl',
-            // 'echo "kubectl Version:"',
-            // 'kubectl version --client=true',
-            // 'echo "Installing helm"',
-            // 'curl --no-progress-meter \
-            //   -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
-            // 'echo "helm Version:"',
-            // 'helm version',
-            // 'echo "Installing Flux"',
-            // 'curl -s https://fluxcd.io/install.sh | sudo bash',
+            'echo "Updating system packages..."',
+            "sudo apt-get update",
+            'echo "Installing awscli"',
+            "apt-get install -y awscli",
+            'echo "Installing kubectl..."',
+            'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"',
+            'chmod +x ./kubectl',
+            'echo "kubectl Version:"',
+            'kubectl version --client=true',
+            'echo "Installing helm"',
+            'curl --no-progress-meter \
+              -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash',
+            'echo "helm Version:"',
+            'helm version',
+            'echo "Installing Flux"',
+            'curl -s https://fluxcd.io/install.sh | sudo bash',
             'echo "Installing kustomize"',
             'curl --silent --location --remote-name \
 "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.2.3/kustomize_kustomize.v3.2.3_linux_amd64" && \
@@ -65,24 +58,26 @@ chmod a+x kustomize_kustomize.v3.2.3_linux_amd64 && \
 sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
           ],
         },
-        // pre_build: {
-        //   commands: [
-        //     'echo "Clonning github repo..."',
-        //     // "git clone https://github.com/Yas2020/EKS-Istio-Multitenant.git",
-        //   ],
-        // },
-        build: {
+        pre_build: {
           commands: [
+            'echo "Preparing deployment manifests..."',
             "ls -al",
             "git config --global user.name CodeBuild",
             "git config --global user.email yas.eftekhari@gmail.com",
             "git remote set-url origin https://Yas2020:$GitHub_PAT@github.com/Yas2020/EKS-Istio-Multitenant.git",
-            // "git config -l",
-            "bash infra-cdk/code-build/deploy-flux.sh",
+            "bash infra-cdk/code-build/prep-manifests.sh",
             'git add flux-cd',
             'git commit -m "flux-cd folder created"',
             'git push'
-            
+          ],
+        },
+        build: {
+          commands: [
+            'echo "Bootstraping Flux into the cluster..."',
+            "bash infra-cdk/code-build/deploy-flux.sh",
+            'git add flux-cd',
+            'git commit -m "source repo configured"',
+            'git push'
           ],
         },
       },
@@ -103,19 +98,35 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
         AWS_REGION: {
           value: cdk.Stack.of(this).region
         },
-        ISTIO_VERSION: {
-          value: config.ISTIO_VERSION
-        },
         GitHub_PAT: {
           type: codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,
           value: 'GitHub-PAT:GitHub-PAT',
         },
+        ACCOUNT_ID: {
+          value: cdk.Stack.of(this).account
+        },
+        RANDOM_STRING: {
+          value: cdk.Stack.of(this).node.addr.slice(0,5)
+        },
+        ENVOY_CONFIG_BUCKET: {
+          value: `envoy-config-${cdk.Stack.of(this).node.addr.slice(0,5)}`
+        },
+        EKS_CLUSTER_NAME: {
+          value: cluster.clusterName
+        },
+        TEXT2TEXT_MODEL_ID: {
+          value: config.TEXT2TEXT_MODEL_ID
+        },
+        EMBEDDING_MODEL_ID: {
+          value: config.EMBEDDING_MODEL_ID
+        },
+        BEDROCK_SERVICE: {
+          value: config.BEDROCK_SERVICE
+        }
       },
     });
 
-
-    // cluster.awsAuth.addMastersRole(project1.role!);
-
+    cluster.awsAuth.addMastersRole(project.role!);
 
     project.addToRolePolicy(new iam.PolicyStatement({
       actions: [
@@ -126,33 +137,13 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
       resources: ['*'],
     }));
 
-    // cluster.awsAuth.addMastersRole(project2.role!);
-
-    // project2.addToRolePolicy(new iam.PolicyStatement({
-    //   actions: [
-    //     "eks:DescribeNodegroup",
-    //     "eks:DescribeUpdate",
-    //     "eks:DescribeCluster"
-    //   ],
-    //   resources: [cluster.clusterArn],
-    // }));
-
-    // project2.addToRolePolicy(new iam.PolicyStatement({
-    //   actions: [
-    //     "cognito-idp:DescribeUserPoolDomain",
-    //     "cognito-idp:ListUserPoolClients",
-    //     "cognito-idp:DescribeUserPoolClient"
-    //   ],
-    //   resources: ['*'],
-    // }));
-
-    // project2.addToRolePolicy(new iam.PolicyStatement({
-    //   actions: [
-    //     "cognito-idp:DescribeUserPoolDomain",
-    //     "cognito-idp:ListUserPoolClients",
-    //     "cognito-idp:DescribeUserPoolClient"
-    //   ],
-    //   resources: ['*'],
-    // }));
+    project.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "eks:DescribeNodegroup",
+        "eks:DescribeUpdate",
+        "eks:DescribeCluster"
+      ],
+      resources: [cluster.clusterArn],
+    }));
   }
 }

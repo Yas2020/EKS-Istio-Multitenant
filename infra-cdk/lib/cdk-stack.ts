@@ -8,7 +8,7 @@ import { IstioDeploy } from "./infrastructure/deploy-istio";
 import { Shared } from "./infrastructure/shared";
 // import { ConfigAuth } from "./infrastructure/deploy-ext-auth"
 import { eksCluster } from "./infrastructure/cluster"
-import { ConfigAuth } from "./infrastructure/new-codebuild"
+import { ConfigFlux } from "./infrastructure/new-codebuild"
 
 export interface EksStackProps extends cdk.StackProps {
   readonly config: SystemConfig;
@@ -19,10 +19,10 @@ export class EksStack extends cdk.Stack {
     super(scope, id, props);
 
     new IdProvider(this, 'openIdCProvider', {tenants: props.config.tenants});
-    // const shared = new Shared(this, "Shared", { config: props.config });
+    const shared = new Shared(this, "Shared", { config: props.config });
 
     // /* Provision a cluster & managed nodegroup */
-    // const cluster = eksCluster(this, props.config, shared.vpc);
+    const cluster = eksCluster(this, props.config, shared.vpc);
     // const nodeGroups = new ManagedNodeGroup(this, "EksManagedNodeGroup", {
     //   cluster: cluster,
     //   sshKeyName: props.config.sshKeyName
@@ -56,7 +56,7 @@ export class EksStack extends cdk.Stack {
     // });
     // securityConfig.node.addDependency(istioDeploy);
 
-    new ConfigAuth(this, 'CodeBuild-GitHub', {config: props.config})
+    new ConfigFlux(this, 'CodeBuild-GitHub', {config:props.config, cluster})
 
   };
 }
