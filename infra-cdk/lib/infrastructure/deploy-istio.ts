@@ -54,9 +54,6 @@ export class IstioDeploy extends Construct {
       timeout: cdk.Duration.minutes(5)
     });
 
-    /* Install cert manager, cert signers, CAs, TLS cert */
-    new CertManager(this, 'CertManager', { version: 'v1.15.1', cluster: props.cluster});
-
     /*
     Install the istio base chart which contains cluster-wide Custom Resource Definitions (CRDs) 
     which must be installed prior to the deployment of the istio control plane
@@ -127,6 +124,10 @@ export class IstioDeploy extends Construct {
       timeout: cdk.Duration.minutes(3) 
     });
     ingressGateway.node.addDependency(istiod);
+
+    /* Install cert manager, cert signers, CAs, TLS cert */
+    const certManager = new CertManager(this, 'CertManager', { version: 'v1.15.1', cluster: props.cluster});
+    certManager.node.addDependency(ingressGateway);
 
     /* 
     Since the external TCP load balancer is configured to forward TCP traffic and use the PROXY protocol, 

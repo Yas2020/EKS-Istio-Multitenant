@@ -14,26 +14,26 @@ export interface SharedProps {
 
 export class Shared extends Construct {
     readonly vpc: ec2.Vpc;
-    readonly app_asset: DockerImageAsset;
-    readonly api_asset: DockerImageAsset;
+    // readonly app_asset: DockerImageAsset;
+    // readonly api_asset: DockerImageAsset;
 
     constructor(scope: Construct, id: string, props: SharedProps) {
         super(scope, id);
 
         /* Build images and store them in repositories */
-        this.app_asset = new DockerImageAsset(scope, 'AppBuildImage', {
-            directory: path.join('image-build/app-build'),
-            buildArgs: {
-                tag: "latest"
-            }
-        });
+        // this.app_asset = new DockerImageAsset(scope, 'AppBuildImage', {
+        //     directory: path.join('image-build/app-build'),
+        //     buildArgs: {
+        //         tag: "latest"
+        //     }
+        // });
 
-        this.api_asset = new DockerImageAsset(scope, 'ApiBuildImage', {
-            directory: path.join('image-build/rag-api-build'),
-            buildArgs: {
-                tag: "latest"
-            }
-        });
+        // this.api_asset = new DockerImageAsset(scope, 'ApiBuildImage', {
+        //     directory: path.join('image-build/rag-api-build'),
+        //     buildArgs: {
+        //         tag: "latest"
+        //     }
+        // });
 
         let vpc: ec2.Vpc;
         if (!props.config.vpc?.vpcId) {
@@ -78,7 +78,7 @@ export class Shared extends Construct {
 
         new s3deploy.BucketDeployment(this, `EnvoyConfigAsset`, {
             prune: false,
-            sources: [s3deploy.Source.asset('/home/project/envoy-config')],
+            sources: [s3deploy.Source.asset('/home/project/infra-cdk/envoy-config')],
             destinationBucket: bucket,
         });
         
@@ -96,14 +96,14 @@ export class Shared extends Construct {
                 new s3deploy.BucketDeployment(this, "ContextualDataDeployment-tenanta", {
                     prune: false,
                     sources: [
-                        s3deploy.Source.asset('/home/project/data/Amazon_SageMaker_FAQs.zip'),
+                        s3deploy.Source.asset('/home/project/infra-cdk/data/Amazon_SageMaker_FAQs.zip'),
                     ],
                     destinationBucket: bucket,
                 });
                 new s3deploy.BucketDeployment(this, "ContextualEmbeddingDeployment-tenanta", {
                     prune: false,
                     sources: [
-                        s3deploy.Source.asset('/home/project/faiss_index/faiss_index-tenanta/')
+                        s3deploy.Source.asset('/home/project/infra-cdk/faiss_index/faiss_index-tenanta/')
                     ],
                     destinationKeyPrefix: "faiss_index",
                     destinationBucket: bucket,
@@ -112,14 +112,14 @@ export class Shared extends Construct {
                 new s3deploy.BucketDeployment(this, "ContextualDataDeployment-tenantb", {
                     prune: false,
                     sources: [
-                        s3deploy.Source.asset('/home/project/data/Amazon_EMR_FAQs.zip'),
+                        s3deploy.Source.asset('/home/project/infra-cdk/data/Amazon_EMR_FAQs.zip'),
                     ],
                     destinationBucket: bucket,
                 });
                 new s3deploy.BucketDeployment(this, `ContextualEmbeddingDeployment-tenantb`, {
                     prune: false,
                     sources: [
-                        s3deploy.Source.asset('/home/project/faiss_index/faiss_index-tenantb/')
+                        s3deploy.Source.asset('/home/project/infra-cdk/faiss_index/faiss_index-tenantb/')
                     ],
                     destinationKeyPrefix: "faiss_index",
                     destinationBucket: bucket,

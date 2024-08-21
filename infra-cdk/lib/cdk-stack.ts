@@ -6,7 +6,7 @@ import { SvcAccountRoles } from "./infrastructure/svc-account-roles";
 import { IdProvider } from "./infrastructure/id-provider-cognito";
 import { IstioDeploy } from "./infrastructure/deploy-istio";
 import { Shared } from "./infrastructure/shared";
-// import { ConfigAuth } from "./infrastructure/deploy-ext-auth"
+import { ConfigAuth } from "./infrastructure/deploy-ext-auth"
 import { eksCluster } from "./infrastructure/cluster"
 import { ConfigFlux } from "./infrastructure/new-codebuild"
 
@@ -23,38 +23,38 @@ export class EksStack extends cdk.Stack {
 
     // /* Provision a cluster & managed nodegroup */
     const cluster = eksCluster(this, props.config, shared.vpc);
-    // const nodeGroups = new ManagedNodeGroup(this, "EksManagedNodeGroup", {
-    //   cluster: cluster,
-    //   sshKeyName: props.config.sshKeyName
-    // });
+    const nodeGroups = new ManagedNodeGroup(this, "EksManagedNodeGroup", {
+      cluster: cluster,
+      sshKeyName: props.config.sshKeyName
+    });
     
     // /* Provide access to AWS resources */
-    // const svcAccountRoles = new SvcAccountRoles(this, 'IRSA', {
-    //   cluster: cluster,
-    //   tenants: props.config.tenants
-    // });
+    const svcAccountRoles = new SvcAccountRoles(this, 'IRSA', {
+      cluster: cluster,
+      tenants: props.config.tenants
+    });
 
     // /* Deploy istio system - Helm */
-    // const istioDeploy = new IstioDeploy(this, 'Istio-Deployment', {
-    //   version: props.config.ISTIO_VERSION,
-    //   cluster: cluster,
-    //   clusterName: props.config.EKS_CLUSTER_NAME
-    // });
-    // istioDeploy.node.addDependency(nodeGroups);
+    const istioDeploy = new IstioDeploy(this, 'Istio-Deployment', {
+      version: props.config.ISTIO_VERSION,
+      cluster: cluster,
+      clusterName: props.config.EKS_CLUSTER_NAME
+    });
+    istioDeploy.node.addDependency(nodeGroups);
       
-    // /* 
-    // Configure and deploy: 
-    // 1 - authn/authz pipeline and policies (envoy as reverse proxy, OAuth2 proxy per tenant) -CodeBuild
-    // 2 - single istio gateway, virtual services and the application per tenant - CodeBuild 
-    // */
-    // const securityConfig = new ConfigAuth(this, 'ConfigEnvoyOAuth2Proxies', {
-    //   config: props.config,
-    //   cluster,
-    //   envoySvcAccountRole: svcAccountRoles.envoySvcAccountRole,
-    //   appImageURL: shared.app_asset.imageUri,
-    //   ragRagImageURL: shared.api_asset.imageUri
-    // });
-    // securityConfig.node.addDependency(istioDeploy);
+    /* 
+    Configure and deploy: 
+    1 - authn/authz pipeline and policies (envoy as reverse proxy, OAuth2 proxy per tenant) -CodeBuild
+    2 - single istio gateway, virtual services and the application per tenant - CodeBuild 
+    */
+    const configAuth = new ConfigAuth(this, 'ConfigEnvoyOAuth2Proxies', {
+      config: props.config,
+      cluster,
+      envoySvcAccountRole: svcAccountRoles.envoySvcAccountRole,
+      // appImageURL: shared.app_asset.imageUri,
+      // ragRagImageURL: shared.api_asset.imageUri
+    });
+    // configAuth.node.addDependency(istioDeploy);
 
     new ConfigFlux(this, 'CodeBuild-GitHub', {config:props.config, cluster})
 
