@@ -1,0 +1,72 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam:::role/tenanta-app-access-role
+  name: tenanta-sa
+  namespace: tenanta-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot
+  labels:
+    app: chatbot
+  namespace: tenanta-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      labels:
+        workload-tier: frontend
+        app: chatbot
+    spec:
+      serviceAccountName: tenanta-sa
+      containers:
+        - image: 
+          imagePullPolicy: Always
+          name: chatbot
+          ports:
+            - containerPort: 8501
+          env:
+          # - name: ISSUER_URI    not used in app code!
+          #   value: https://cognito-idp.ca-central-1.amazonaws.com/ca-central-1_429zNlq0U
+          - name: SESSIONS_TABLE
+            value: Sessions_tenanta_
+        - image: 
+          imagePullPolicy: Always
+          name: ragapi
+          ports:
+            - containerPort: 8000
+          env:
+          - name: CONTEXTUAL_DATA_BUCKET
+            value: contextual-data-tenanta-
+          - name: CHATHISTORY_TABLE
+            value: ChatHistory_tenanta_
+          - name: TEXT2TEXT_MODEL_ID
+            value: 
+          - name: EMBEDDING_MODEL_ID
+            value: 
+          - name: BEDROCK_SERVICE
+            value: 
+          - name: AWS_DEFAULT_REGION
+            value: ca-central-1
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: chatbot
+  labels:
+    app: chatbot
+  namespace: tenanta-ns
+spec:
+  selector:
+    app: chatbot
+  ports:
+    - port: 80
+      name: http
+      targetPort: 8501
