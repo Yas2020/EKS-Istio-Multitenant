@@ -7,7 +7,7 @@ resources:
 images:
 - name: ghcr.io/yas2020/eks-istio-multitenant/app-ui
   newName: ghcr.io/yas2020/eks-istio-multitenant/app-ui # {"$imagepolicy": "flux-system:app-ui:name"}
-  newTag: 0.0.1 # {"$imagepolicy": "flux-system:app-ui:tag"}
+  newTag: 1.0.2 # {"$imagepolicy": "flux-system:app-ui:tag"}
 - name: ghcr.io/yas2020/eks-istio-multitenant/rag-api
   newName: ghcr.io/yas2020/eks-istio-multitenant/rag-api # {"$imagepolicy": "flux-system:rag-api:name"}
-  newTag: 0.0.1 # {"$imagepolicy": "flux-system:rag-api:tag"}
+  newTag: 1.0.2 # {"$imagepolicy": "flux-system:rag-api:tag"}
