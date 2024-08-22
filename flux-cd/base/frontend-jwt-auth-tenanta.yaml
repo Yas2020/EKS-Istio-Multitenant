@@ -1,0 +1,15 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: frontend-jwt-auth
+  namespace: tenanta-ns
+spec:
+  selector:
+    matchLabels:
+      workload-tier: frontend
+  jwtRules:
+  - issuer: "https://cognito-idp.ca-central-1.amazonaws.com/ca-central-1_ujn3ytJjQ"
+    forwardOriginalToken: true
+    outputClaimToHeaders:
+    - header: "x-auth-request-tenantid"
+      claim: "custom:tenantid"
