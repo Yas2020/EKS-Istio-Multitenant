@@ -27,7 +27,7 @@ spec:
     spec:
       serviceAccountName: tenantb-sa
       containers:
-        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui
+        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui:latest
           imagePullPolicy: Always
           name: chatbot
           ports:
@@ -35,7 +35,7 @@ spec:
           env:
           - name: SESSIONS_TABLE
             value: Sessions_tenantb_c88c6
-        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api
+        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api:latest
           imagePullPolicy: Always
           name: ragapi
           ports:
@@ -115,10 +115,10 @@ spec:
         timeout: 60s
         metadata:
           type: bash
-          cmd: "curl -s http://chatbot-canary.tenantb"
+          cmd: "curl -s http://chatbot-canary.tenantb-ns"
       - name: load-test
         type: rollout
         url: http://loadtester.flagger-system/
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.tenantb"
+          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.tenantb-ns"

@@ -115,10 +115,10 @@ spec:
         timeout: 60s
         metadata:
           type: bash
-          cmd: "curl -s http://chatbot-canary.tenanta"
+          cmd: "curl -s http://chatbot-canary.tenanta-ns"
       - name: load-test
         type: rollout
         url: http://loadtester.flagger-system/
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.tenanta"
+          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.tenanta-ns"
