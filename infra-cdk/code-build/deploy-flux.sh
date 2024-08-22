@@ -56,13 +56,13 @@ flux create kustomization chatbot \
 
 #  Create the manifest for the ImageRepository resource
 flux create image repository app-ui \
-  --image=ghcr.io/$GITHUB_USER/eks-istio-multitenant/app-ui \
+  --image=ghcr.io/yas2020/eks-istio-multitenant/app-ui \
   --interval=1m \
   --export > ./flux-cd/clusters/dev/app-ui-image-source.yaml
 
 #  Create the manifest for the ImageRepository resource
 flux create image repository rag-api \
-  --image=ghcr.io/$GITHUB_USER/eks-istio-multitenant/rag-api \
+  --image=ghcr.io/yas2020/eks-istio-multitenant/rag-api \
   --interval=1m \
   --export > ./flux-cd/clusters/dev/rag-api-image-source.yaml
 

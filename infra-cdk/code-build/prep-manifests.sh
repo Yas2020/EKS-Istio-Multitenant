@@ -169,21 +169,75 @@ spec:
             value: ${BEDROCK_SERVICE}
           - name: AWS_DEFAULT_REGION
             value: ${AWS_REGION}
+# ---
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   name: chatbot
+#   labels:
+#     app: chatbot
+#   namespace: ${NAMESPACE}
+# spec:
+#   selector:
+#     app: chatbot
+#   ports:
+#     - port: 80
+#       name: http
+#       targetPort: 8501
 ---
-kind: Service
-apiVersion: v1
+apiVersion: flagger.app/v1beta1
+kind: Canary
 metadata:
   name: chatbot
-  labels:
-    app: chatbot
   namespace: ${NAMESPACE}
 spec:
-  selector:
-    app: chatbot
-  ports:
-    - port: 80
-      name: http
-      targetPort: 8501
+  provider: istio
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chatbot
+  progressDeadlineSeconds: 60
+  service:
+    port: 80
+    targetPort: 8501 
+    portDiscovery: true
+    hosts:
+      - ${TENANT}.example.com
+    gateways:
+      - multi-tenant-gateway-ns/multi-tenant-gateway
+  analysis:
+    interval: 1m
+    iterations: 10
+    threshold: 2
+    # maxWeight: 30
+    # stepWeight: 10
+    metrics:
+    - name: request-success-rate
+      # minimum req success rate (non 5xx responses)
+      # percentage (0-100)
+      thresholdRange:
+        min: 99
+      interval: 1m
+    - name: request-duration
+      # maximum req duration P99
+      # milliseconds
+      thresholdRange:
+        max: 500
+      interval: 1m
+    webhooks:
+      - name: acceptance-test
+        type: pre-rollout
+        url: http://loadtester.flagger-system/
+        timeout: 60s
+        metadata:
+          type: bash
+          cmd: "curl -s http://chatbot-canary.${TENANT}"
+      - name: load-test
+        type: rollout
+        url: http://loadtester.flagger-system/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.${TENANT}"
 EOF
 
 #   cat chatbot.yaml
@@ -252,25 +306,25 @@ EOF
 # referred to by the microservice and the Istio VirtualService construct.
 # https://istio.io/v1.3/docs/reference/config/networking/v1alpha3/virtual-service/ 
 
-  cat << EOF > chatbot-vs-${TENANT}.yaml
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: chatbot
-  namespace: ${NAMESPACE}
-spec:
-  hosts:
-  - ${TENANT}.example.com
-  gateways:
-  # Mention ns as gateway lives in a different ns - otherwise, will not be found by vs
-  - multi-tenant-gateway-ns/multi-tenant-gateway
-  http:
-  - route:
-    - destination:
-        host: chatbot.${NAMESPACE}.svc.cluster.local
-        port:
-          number: 80
-EOF
+#   cat << EOF > chatbot-vs-${TENANT}.yaml
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: chatbot
+#   namespace: ${NAMESPACE}
+# spec:
+#   hosts:
+#   - ${TENANT}.example.com
+#   gateways:
+#   # Mention ns as gateway lives in a different ns - otherwise, will not be found by vs
+#   - multi-tenant-gateway-ns/multi-tenant-gateway
+#   http:
+#   - route:
+#     - destination:
+#         host: chatbot.${NAMESPACE}.svc.cluster.local
+#         port:
+#           number: 80
+# EOF
 
 #   cat chatbot-vs.yaml
 #   echo "-> Deploying VirtualService to expose chatbot via Ingress Gateway"
