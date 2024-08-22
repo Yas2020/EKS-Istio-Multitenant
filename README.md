@@ -11,7 +11,7 @@ This project is my attempt based on [this](https://aws.amazon.com/blogs/containe
 
 Here is a schema of how traffic flows in the cluster.
 
-![alt text](./images/architecture.png)
+![alt text](./infra-cdk/images/architecture.png)
 
 The general goal here is to move the application-based routes resolution, authorization, and authentication to a proxy that can resolve these mapping issues in a more natural and maintainable way.
 
@@ -23,7 +23,7 @@ Each tenant that signs up for our SaaS service is associated with a single Amazo
 
 The application code builds a simple GAI chatbot with RAG hosted using AWS Bedrock API wrapped by FastAPI that formats the prompt, adds history conversation. [FAISS](https://github.com/facebookresearch/faiss) is used as efficient similarity search and storage for dense vectors (or PostgresSQL, OpenSearch for production, for example) and Amazon DynamoDB for storing history messages. LangChain is used for formatting user messages combined with RAG mechanism to be fed into a LLM model on Amazon Bedrock.
 
-![alt text](./images/Ingestion-of-contextual-data.png)
+![alt text](./infra-cdk/images/Ingestion-of-contextual-data.png)
 
 The ingestion mechanism uses LangChain’s CharacterTextSplitter to chunk the ingested data into reasonable sizes, and the FAISS library converts each of the chunks into a vector embedding by calling the Titan embeddings model, creating an index of the embeddings. This indexing improves the response time for similarity search. The set of indexes so created are output in a binary formatted file and uploaded back into the Amazon S3 bucket, which is accessed by the RAG-API microservice during bootstrap and loaded into its memory. With larger vector databases, the index is created and managed by the database instance and can be queried by the application using database-specific APIs. Having a dedicated vector database decouples the loading, updating, and indexing of context data from the application, as well as the scaling of the database instance.
 

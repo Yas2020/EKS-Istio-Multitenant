@@ -2,38 +2,9 @@
 
 mkdir -p ./flux-cd/base && cd ./flux-cd/base
 
-echo "Current directory $PWD"
-# aws eks update-kubeconfig --name ${EKS_CLUSTER_NAME}
-
 echo "Creating manifest for gateway"
 kubectl create namespace multi-tenant-gateway-ns --dry-run=client -o yaml > multi-tenant-gateway-ns.yaml
 
-# kubectl create namespace multi-tenant-gateway-ns
-# kubectl create namespace tenanta-ns
-# kubectl create namespace tenantb-ns
-
-# echo "Enabling sidecar injection in namespaces"
-# kubectl label namespace tenanta-ns istio-injection=enabled
-# kubectl label namespace tenantb-ns istio-injection=enabled
-# kubectl get namespace -L istio-injection
-
-# echo "Applying STRICT mTLS Policy on all application namespaces"
-# cat << EOF > strictmtls.yaml
-# ---
-# apiVersion: security.istio.io/v1beta1
-# kind: PeerAuthentication
-# metadata:
-#   name: strict-mtls
-# spec:
-#   mtls:
-#     mode: STRICT
-# EOF
-
-# kubectl -n tenanta-ns apply -f strictmtls.yaml
-# kubectl -n tenantb-ns apply -f strictmtls.yaml
-
-# kubectl -n tenanta-ns get PeerAuthentication
-# kubectl -n tenantb-ns get PeerAuthentication
 
 # It is possible to restrict the set of virtual services that can bind to a gateway server using the 
 # namespace/hostname syntax in the hosts field as we did in the following. 
@@ -100,18 +71,18 @@ do
   echo "Deploying ${TENANT} services ..."
   echo "-> Deploying chatbot service.."
 
-  echo "Applying STRICT mTLS Policy on all application namespaces"
-cat << EOF > strictmtls-${TENANT}.yaml
----
-apiVersion: security.istio.io/v1beta1
-kind: PeerAuthentication
-metadata:
-  name: strict-mtls
-  namespace: ${NAMESPACE}
-spec:
-  mtls:
-    mode: STRICT
-EOF
+#   echo "Applying STRICT mTLS Policy on all application namespaces"
+# cat << EOF > strictmtls-${TENANT}.yaml
+# ---
+# apiVersion: security.istio.io/v1beta1
+# kind: PeerAuthentication
+# metadata:
+#   name: strict-mtls
+#   namespace: ${NAMESPACE}
+# spec:
+#   mtls:
+#     mode: STRICT
+# EOF
 
   cat << EOF > chatbot-${TENANT}.yaml 
 ---
@@ -248,24 +219,24 @@ EOF
 # https://istio.io/latest/docs/tasks/security/authentication/claim-to-header/
 # https://istio.io/latest/docs/tasks/security/authentication/authn-policy/
 
-  echo "Creating AuthN Policy for ${TENANT}"
-  cat << EOF > frontend-jwt-auth-${TENANT}.yaml
-apiVersion: security.istio.io/v1beta1
-kind: RequestAuthentication
-metadata:
-  name: frontend-jwt-auth
-  namespace: ${NAMESPACE}
-spec:
-  selector:
-    matchLabels:
-      workload-tier: frontend
-  jwtRules:
-  - issuer: "${ISSUER_URI}"
-    forwardOriginalToken: true
-    outputClaimToHeaders:
-    - header: "x-auth-request-tenantid"
-      claim: "custom:tenantid"
-EOF
+#   echo "Creating AuthN Policy for ${TENANT}"
+#   cat << EOF > frontend-jwt-auth-${TENANT}.yaml
+# apiVersion: security.istio.io/v1beta1
+# kind: RequestAuthentication
+# metadata:
+#   name: frontend-jwt-auth
+#   namespace: ${NAMESPACE}
+# spec:
+#   selector:
+#     matchLabels:
+#       workload-tier: frontend
+#   jwtRules:
+#   - issuer: "${ISSUER_URI}"
+#     forwardOriginalToken: true
+#     outputClaimToHeaders:
+#     - header: "x-auth-request-tenantid"
+#       claim: "custom:tenantid"
+# EOF
 
 #   echo "Applying Frontend Authentication Policy for ${TENANT}"
 #   kubectl -n ${NAMESPACE} apply -f frontend-jwt-auth-${TENANT}.yaml
@@ -275,27 +246,27 @@ EOF
 # valid JWT with requestPrincipal, which is the istio ingress gateway. 
 # The policy also require the JWT to have a claim named "custom:tenantid", containing the value "tenanta" (or "tenantb")
 
-  echo "Creating AuthZ Policy for ${TENANT}"
-  cat << EOF > frontend-authz-pol-${TENANT}.yaml
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: frontend-authz-pol
-  namespace: ${NAMESPACE}
-spec:
-  selector:
-    matchLabels:
-      workload-tier: frontend
-  action: ALLOW
-  rules:
-  - from:
-    - source:
-       namespaces: ["istio-ingress"]
-       principals: ["cluster.local/ns/istio-ingress/sa/istio-ingressgateway"]
-    when:
-    - key: request.auth.claims[custom:tenantid]
-      values: ["${TENANT}"]
-EOF
+#   echo "Creating AuthZ Policy for ${TENANT}"
+#   cat << EOF > frontend-authz-pol-${TENANT}.yaml
+# apiVersion: security.istio.io/v1beta1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: frontend-authz-pol
+#   namespace: ${NAMESPACE}
+# spec:
+#   selector:
+#     matchLabels:
+#       workload-tier: frontend
+#   action: ALLOW
+#   rules:
+#   - from:
+#     - source:
+#        namespaces: ["istio-ingress"]
+#        principals: ["cluster.local/ns/istio-ingress/sa/istio-ingressgateway"]
+#     when:
+#     - key: request.auth.claims[custom:tenantid]
+#       values: ["${TENANT}"]
+# EOF
 
 #   echo "Applying Frontend Authorization Policy for ${TENANT}"
 #   kubectl -n ${NAMESPACE} apply -f frontend-authz-pol-${TENANT}.yaml
@@ -357,7 +328,6 @@ metadata:
   labels:
     istio-injection: enabled
 EOF
-
 
 
 cat << EOF > kustomization.yaml
