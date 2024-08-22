@@ -1,0 +1,9 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: rag-api
+  namespace: flux-system
+spec:
+  image: ghcr.io/yas2020/eks-istio-multitenant/rag-api
+  interval: 1m0s
