@@ -1,0 +1,70 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::253226449123:role/tenanta-app-access-role
+  name: tenanta-sa
+  namespace: tenanta-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot
+  labels:
+    app: chatbot
+  namespace: tenanta-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      labels:
+        workload-tier: frontend
+        app: chatbot
+    spec:
+      serviceAccountName: tenanta-sa
+      containers:
+        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui
+          imagePullPolicy: Always
+          name: chatbot
+          ports:
+            - containerPort: 8501
+          env:
+          - name: SESSIONS_TABLE
+            value: Sessions_tenanta_c88c6
+        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api
+          imagePullPolicy: Always
+          name: ragapi
+          ports:
+            - containerPort: 8000
+          env:
+          - name: CONTEXTUAL_DATA_BUCKET
+            value: contextual-data-tenanta-c88c6
+          - name: CHATHISTORY_TABLE
+            value: ChatHistory_tenanta_c88c6
+          - name: TEXT2TEXT_MODEL_ID
+            value: meta.llama3-8b-instruct-v1:0
+          - name: EMBEDDING_MODEL_ID
+            value: amazon.titan-embed-text-v2:0
+          - name: BEDROCK_SERVICE
+            value: bedrock-runtime
+          - name: AWS_DEFAULT_REGION
+            value: ca-central-1
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: chatbot
+  labels:
+    app: chatbot
+  namespace: tenanta-ns
+spec:
+  selector:
+    app: chatbot
+  ports:
+    - port: 80
+      name: http
+      targetPort: 8501
