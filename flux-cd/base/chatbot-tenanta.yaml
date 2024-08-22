@@ -90,8 +90,8 @@ spec:
     gateways:
       - multi-tenant-gateway-ns/multi-tenant-gateway
   analysis:
-    interval: 1m
-    iterations: 10
+    interval: 2m
+    iterations: 3
     threshold: 2
     # maxWeight: 30
     # stepWeight: 10
@@ -101,13 +101,13 @@ spec:
       # percentage (0-100)
       thresholdRange:
         min: 99
-      interval: 1m
+      interval: 2m
     - name: request-duration
       # maximum req duration P99
       # milliseconds
       thresholdRange:
         max: 500
-      interval: 1m
+      interval: 2m
     webhooks:
       - name: acceptance-test
         type: pre-rollout
