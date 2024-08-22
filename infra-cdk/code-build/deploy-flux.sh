@@ -54,4 +54,70 @@ flux create kustomization chatbot \
   --health-check-timeout=3m \
   --export > ./flux-cd/clusters/dev/chatbot-kustomization.yaml
 
- 
+#  Create the manifest for the ImageRepository resource
+flux create image repository app-ui \
+  --image=ghcr.io/$GITHUB_USER/eks-istio-multitenant/app-ui \
+  --interval=1m \
+  --export > ./flux-cd/clusters/dev/app-ui-image-source.yaml
+
+#  Create the manifest for the ImageRepository resource
+flux create image repository rag-api \
+  --image=ghcr.io/$GITHUB_USER/eks-istio-multitenant/rag-api \
+  --interval=1m \
+  --export > ./flux-cd/clusters/dev/rag-api-image-source.yaml
+
+# Create an ImagePolicy resource to tell FluxCD how to determine the newest image tags. 
+# We’ll use the semver filter to only allow image tags that are valid semantic versions and 
+# equal to or greater than 1.0.0
+
+flux create image policy app-ui \
+  --image-ref=app-ui \
+  --select-semver='>=1.0.0' \
+  --export > ./flux-cd/clusters/dev/app-ui-image-policy.yaml
+
+flux create image policy rag-api \
+  --image-ref=rag-api \
+  --select-semver='>=1.0.0' \
+  --export > ./flux-cd/clusters/dev/rag-api-image-policy.yaml
+
+# Create an ImageUpdateAutomation resource which enables FluxCD to update images tags 
+# in our YAML manifests
+
+flux create image update app-ui \
+  --interval=1m \
+  --git-repo-ref=chatbot-source \
+  --git-repo-path="./flux-cd/base" \
+  --checkout-branch=main \
+  --author-name=fluxcdbot \
+  --author-email=fluxcdbot@users.noreply.github.com \
+  --commit-template="{{range .Updated.Images}}{{println .}}{{end}}" \
+  --export > ./flux-cd/clusters/dev/app-ui-image-update.yaml
+
+flux create image update rag-api \
+  --interval=1m \
+  --git-repo-ref=chatbot-source \
+  --git-repo-path="./flux-cd/base" \
+  --checkout-branch=main \
+  --author-name=fluxcdbot \
+  --author-email=fluxcdbot@users.noreply.github.com \
+  --commit-template="{{range .Updated.Images}}{{println .}}{{end}}" \
+  --export > ./flux-cd/clusters/dev/rag-api-image-update.yaml
+
+# Preparation for Progressive Deliver - Canary
+
+# Install Istio Prometheus
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.22/samples/addons/prometheus.yaml
+
+# Install Flagger -helm
+helm repo add flagger https://flagger.app
+helm repo update
+
+kubectl create ns flagger-system
+
+helm upgrade -i flagger flagger/flagger \
+  --namespace flagger-system \
+  --set metricsServer=http://prometheus.istio-system:9090 \
+  --set meshProvider=istio
+
+helm upgrade -i loadtester flagger/loadtester \
+  --namespace flagger-system
