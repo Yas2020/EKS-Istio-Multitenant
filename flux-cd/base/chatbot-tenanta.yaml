@@ -89,6 +89,10 @@ spec:
       - tenanta.example.com
     gateways:
       - multi-tenant-gateway-ns/multi-tenant-gateway
+    trafficPolicy:
+      tls:
+        # use ISTIO_MUTUAL when mTLS is enabled
+        mode: DISABLE
   analysis:
     interval: 2m
     iterations: 3
