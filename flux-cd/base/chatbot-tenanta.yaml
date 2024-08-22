@@ -92,7 +92,7 @@ spec:
     trafficPolicy:
       tls:
         # use ISTIO_MUTUAL when mTLS is enabled
-        mode: DISABLE
+        mode: ISTIO_MUTUAL
   analysis:
     interval: 2m
     iterations: 3
