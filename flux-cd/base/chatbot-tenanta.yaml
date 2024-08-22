@@ -27,7 +27,7 @@ spec:
     spec:
       serviceAccountName: tenanta-sa
       containers:
-        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui
+        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui:latest
           imagePullPolicy: Always
           name: chatbot
           ports:
@@ -35,7 +35,7 @@ spec:
           env:
           - name: SESSIONS_TABLE
             value: Sessions_tenanta_c88c6
-        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api
+        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api:latest
           imagePullPolicy: Always
           name: ragapi
           ports:
