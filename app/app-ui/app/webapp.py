@@ -83,7 +83,7 @@ with st.sidebar.expander("⚙️", expanded=True):
 # streamlit app layout sidebar + main panel
 # the main panel has a title, a sub header and user input textbox
 # and a text area for response and history
-st.title("👩‍💻 Virtual assistant for a knowledge base")
+st.title("👩‍💻 Virtual assistant for a knowledge base - done by")
 st.subheader(f" Powered by :blue[{TEXT2TEXT_MODEL_LIST[0]}] for text generation and :blue[{EMBEDDINGS_MODEL_LIST[0]}] for embeddings")
 st.markdown(f"**Tenant ID:** :blue[{tenantid}] &emsp; &emsp; **User:** :blue[{user_email}]")
 
