@@ -10,4 +10,4 @@ images:
   newTag: 1.0.6 # {"$imagepolicy": "flux-system:app-ui:tag"}
 - name: ghcr.io/yas2020/eks-istio-multitenant/rag-api
   newName: ghcr.io/yas2020/eks-istio-multitenant/rag-api # {"$imagepolicy": "flux-system:rag-api:name"}
-  newTag: 1.0.6 # {"$imagepolicy": "flux-system:rag-api:tag"}
+  newTag: 1.0.7 # {"$imagepolicy": "flux-system:rag-api:tag"}
