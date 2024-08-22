@@ -143,7 +143,7 @@ spec:
     spec:
       serviceAccountName: ${SA_NAME}
       containers:
-        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui
+        - image: ghcr.io/yas2020/eks-istio-multitenant/app-ui:latest
           imagePullPolicy: Always
           name: chatbot
           ports:
@@ -151,7 +151,7 @@ spec:
           env:
           - name: SESSIONS_TABLE
             value: ${SESSIONS_TABLE}
-        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api
+        - image: ghcr.io/yas2020/eks-istio-multitenant/rag-api:latest
           imagePullPolicy: Always
           name: ragapi
           ports:
@@ -231,13 +231,13 @@ spec:
         timeout: 60s
         metadata:
           type: bash
-          cmd: "curl -s http://chatbot-canary.${TENANT}"
+          cmd: "curl -s http://chatbot-canary.${NAMESPACE}"
       - name: load-test
         type: rollout
         url: http://loadtester.flagger-system/
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.${TENANT}"
+          cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.${NAMESPACE}"
 EOF
 
 #   cat chatbot.yaml
@@ -369,11 +369,11 @@ resources:
 - ../../base
 images:
 - name: ghcr.io/yas2020/eks-istio-multitenant/app-ui
-  newName: ghcr.io/yas2020/eks-istio-multitenant/app-ui # {"\$imagepolicy": "flux-system:store-front:name"}
-  newTag: 0.0.1 # {"\$imagepolicy": "flux-system:store-front:tag"}
+  newName: ghcr.io/yas2020/eks-istio-multitenant/app-ui # {"\$imagepolicy": "flux-system:app-ui:name"}
+  newTag: 1.0.0 # {"\$imagepolicy": "flux-system:app-ui:tag"}
 - name: ghcr.io/yas2020/eks-istio-multitenant/rag-api
-  newName: ghcr.io/yas2020/eks-istio-multitenant/rag-api # {"\$imagepolicy": "flux-system:store-front:name"}
-  newTag: 0.0.1 # {"\$imagepolicy": "flux-system:store-front:tag"}
+  newName: ghcr.io/yas2020/eks-istio-multitenant/rag-api # {"\$imagepolicy": "flux-system:rag-api:name"}
+  newTag: 1.0.0 # {"\$imagepolicy": "flux-system:rag-api:tag"}
 EOF
 
 # view the kustomization.yaml file

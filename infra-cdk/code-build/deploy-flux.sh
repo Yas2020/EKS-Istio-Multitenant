@@ -86,7 +86,7 @@ flux create image policy rag-api \
 flux create image update app-ui \
   --interval=1m \
   --git-repo-ref=chatbot-source \
-  --git-repo-path="./flux-cd/base" \
+  --git-repo-path="./flux-cd/overlays/dev" \
   --checkout-branch=main \
   --author-name=fluxcdbot \
   --author-email=fluxcdbot@users.noreply.github.com \
@@ -96,7 +96,7 @@ flux create image update app-ui \
 flux create image update rag-api \
   --interval=1m \
   --git-repo-ref=chatbot-source \
-  --git-repo-path="./flux-cd/base" \
+  --git-repo-path="./flux-cd/overlays/dev" \
   --checkout-branch=main \
   --author-name=fluxcdbot \
   --author-email=fluxcdbot@users.noreply.github.com \
