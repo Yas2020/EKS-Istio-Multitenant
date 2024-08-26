@@ -41,3 +41,7 @@ Download the TLS self-singed root certificate from K8s cluster secret and have y
 
 Obtain the public ip address of NLB hostname:
 `nslookup <nlb-hostname>`
+
+## CI/CD - GitOps
+GitHub Actions are used for CI. A push for the app code results in a new image built. A new release of an image will trigger the CD process done by FluxCD. The components of CD pipeline including Flux, Flagger and laodtester, Prometheus are configured and installed during cloud infrastructure deployment. The base manifests are generated and push into Flux code repository. Using overlays, a customized version for tenants is deployed into the cluster. Flagger detects the new deployments and starts the progressive delivery. Flagger uses Prometheus and aggregated istio metrics to load test the new canary deployments while diverting traffic incrementally to it. If tests passed, the canary deployment is promoted to recieve 100% traffic, otherwise a rollback will occur.
+

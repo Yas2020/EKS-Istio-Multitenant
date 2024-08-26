@@ -119,7 +119,6 @@ export class IstioDeploy extends Construct {
             "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "ip",
             "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol": "*",
             "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled": "true",
-            // "service.beta.kubernetes.io/aws-load-balancer-backend-protocol": "tcp",
           }
         },    
       },

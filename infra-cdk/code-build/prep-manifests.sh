@@ -2,9 +2,8 @@
 
 mkdir -p ./flux-cd/base && cd ./flux-cd/base
 
-echo "Creating manifest for gateway"
+echo "Creating a manifest for gateway"
 kubectl create namespace multi-tenant-gateway-ns --dry-run=client -o yaml > multi-tenant-gateway-ns.yaml
-
 
 # It is possible to restrict the set of virtual services that can bind to a gateway server using the 
 # namespace/hostname syntax in the hosts field as we did in the following. 
@@ -13,7 +12,6 @@ kubectl create namespace multi-tenant-gateway-ns --dry-run=client -o yaml > mult
 # VirtualServices will be bound to this gateway to control the routing of TCP traffic 
 # arriving and terminated at gateway port 443, to the tenant applications.
 
-# echo "Deploying Istio Gateway resource"
 cat << EOF > multi-tenant-gateway.yaml
 ---
 apiVersion: networking.istio.io/v1alpha3
@@ -23,7 +21,7 @@ metadata:
   namespace: multi-tenant-gateway-ns
 spec:
   selector:
-    istio: ingressgateway   # use Istio default gateway implementation
+    istio: ingressgateway  
   servers:
   - port:
       number: 80
@@ -48,8 +46,6 @@ spec:
       maxProtocolVersion: TLSV1_3
 EOF
 
-# kubectl -n multi-tenant-gateway-ns apply -f gateway.yaml
-
 TENANTS="tenanta tenantb"
 for TENANT in $TENANTS
 do
@@ -71,18 +67,18 @@ do
   echo "Deploying ${TENANT} services ..."
   echo "-> Deploying chatbot service.."
 
-#   echo "Applying STRICT mTLS Policy on all application namespaces"
-# cat << EOF > strictmtls-${TENANT}.yaml
-# ---
-# apiVersion: security.istio.io/v1beta1
-# kind: PeerAuthentication
-# metadata:
-#   name: strict-mtls
-#   namespace: ${NAMESPACE}
-# spec:
-#   mtls:
-#     mode: STRICT
-# EOF
+  echo "Applying STRICT mTLS Policy on all application namespaces"
+cat << EOF > strictmtls-${TENANT}.yaml
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: ${NAMESPACE}
+spec:
+  mtls:
+    mode: STRICT
+EOF
 
   cat << EOF > chatbot-${TENANT}.yaml 
 ---
@@ -140,21 +136,6 @@ spec:
             value: ${BEDROCK_SERVICE}
           - name: AWS_DEFAULT_REGION
             value: ${AWS_REGION}
-# ---
-# kind: Service
-# apiVersion: v1
-# metadata:
-#   name: chatbot
-#   labels:
-#     app: chatbot
-#   namespace: ${NAMESPACE}
-# spec:
-#   selector:
-#     app: chatbot
-#   ports:
-#     - port: 80
-#       name: http
-#       targetPort: 8501
 ---
 apiVersion: flagger.app/v1beta1
 kind: Canary
@@ -177,8 +158,8 @@ spec:
     gateways:
       - multi-tenant-gateway-ns/multi-tenant-gateway
   analysis:
-    interval: 1m
-    iterations: 10
+    interval: 2m
+    iterations: 3
     threshold: 2
     # maxWeight: 30
     # stepWeight: 10
@@ -188,13 +169,13 @@ spec:
       # percentage (0-100)
       thresholdRange:
         min: 99
-      interval: 1m
+      interval: 2m
     - name: request-duration
       # maximum req duration P99
       # milliseconds
       thresholdRange:
         max: 500
-      interval: 1m
+      interval: 2m
     webhooks:
       - name: acceptance-test
         type: pre-rollout
@@ -211,95 +192,58 @@ spec:
           cmd: "hey -z 1m -q 10 -c 2 http://chatbot-canary.${NAMESPACE}"
 EOF
 
-#   cat chatbot.yaml
-#   kubectl -n ${NAMESPACE} apply -f chatbot.yaml
+# We dont create virtual services as they will be created and handled by Flagger. 
 
 # Create a jwt request authentication policy to require requires end-user JWT and requires end-user JWT on
 # frontend workload (chatbot app) in namespace where it selects.
 # https://istio.io/latest/docs/tasks/security/authentication/claim-to-header/
 # https://istio.io/latest/docs/tasks/security/authentication/authn-policy/
 
-#   echo "Creating AuthN Policy for ${TENANT}"
-#   cat << EOF > frontend-jwt-auth-${TENANT}.yaml
-# apiVersion: security.istio.io/v1beta1
-# kind: RequestAuthentication
-# metadata:
-#   name: frontend-jwt-auth
-#   namespace: ${NAMESPACE}
-# spec:
-#   selector:
-#     matchLabels:
-#       workload-tier: frontend
-#   jwtRules:
-#   - issuer: "${ISSUER_URI}"
-#     forwardOriginalToken: true
-#     outputClaimToHeaders:
-#     - header: "x-auth-request-tenantid"
-#       claim: "custom:tenantid"
-# EOF
-
-#   echo "Applying Frontend Authentication Policy for ${TENANT}"
-#   kubectl -n ${NAMESPACE} apply -f frontend-jwt-auth-${TENANT}.yaml
+  echo "Creating AuthN Policy for ${TENANT}"
+  cat << EOF > frontend-jwt-auth-${TENANT}.yaml
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: frontend-jwt-auth
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    matchLabels:
+      workload-tier: frontend
+  jwtRules:
+  - issuer: "${ISSUER_URI}"
+    forwardOriginalToken: true
+    outputClaimToHeaders:
+    - header: "x-auth-request-tenantid"
+      claim: "custom:tenantid"
+EOF
 
 # Add a authorization policy to only allow requests with valid tokens for frontend workloads 
 # in the tenants namespaces. The policy requires all requests to the frontend workload to have a 
 # valid JWT with requestPrincipal, which is the istio ingress gateway. 
 # The policy also require the JWT to have a claim named "custom:tenantid", containing the value "tenanta" (or "tenantb")
 
-#   echo "Creating AuthZ Policy for ${TENANT}"
-#   cat << EOF > frontend-authz-pol-${TENANT}.yaml
-# apiVersion: security.istio.io/v1beta1
-# kind: AuthorizationPolicy
-# metadata:
-#   name: frontend-authz-pol
-#   namespace: ${NAMESPACE}
-# spec:
-#   selector:
-#     matchLabels:
-#       workload-tier: frontend
-#   action: ALLOW
-#   rules:
-#   - from:
-#     - source:
-#        namespaces: ["istio-ingress"]
-#        principals: ["cluster.local/ns/istio-ingress/sa/istio-ingressgateway"]
-#     when:
-#     - key: request.auth.claims[custom:tenantid]
-#       values: ["${TENANT}"]
-# EOF
-
-#   echo "Applying Frontend Authorization Policy for ${TENANT}"
-#   kubectl -n ${NAMESPACE} apply -f frontend-authz-pol-${TENANT}.yaml
-
-# Bind virtual services to the gateway - The following routing rule forwards (or routes) traffic arriving 
-# at  gateway called “llm-demo-gateway” (at port 443) to internal services (at port 80) in the mesh based on name record in 
-# the internal DNS, as <service-name>.<namespace-name>.svc.cluster.local, which becomes the service endpoint 
-# referred to by the microservice and the Istio VirtualService construct.
-# https://istio.io/v1.3/docs/reference/config/networking/v1alpha3/virtual-service/ 
-
-#   cat << EOF > chatbot-vs-${TENANT}.yaml
-# apiVersion: networking.istio.io/v1alpha3
-# kind: VirtualService
-# metadata:
-#   name: chatbot
-#   namespace: ${NAMESPACE}
-# spec:
-#   hosts:
-#   - ${TENANT}.example.com
-#   gateways:
-#   # Mention ns as gateway lives in a different ns - otherwise, will not be found by vs
-#   - multi-tenant-gateway-ns/multi-tenant-gateway
-#   http:
-#   - route:
-#     - destination:
-#         host: chatbot.${NAMESPACE}.svc.cluster.local
-#         port:
-#           number: 80
-# EOF
-
-#   cat chatbot-vs.yaml
-#   echo "-> Deploying VirtualService to expose chatbot via Ingress Gateway"
-#   kubectl -n ${NAMESPACE} apply -f chatbot-vs.yaml
+  echo "Creating AuthZ Policy for ${TENANT}"
+  cat << EOF > frontend-authz-pol-${TENANT}.yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: frontend-authz-pol
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    matchLabels:
+      workload-tier: frontend
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+       namespaces: ["istio-ingress"]
+       principals: ["cluster.local/ns/istio-ingress/sa/istio-ingressgateway"]
+    when:
+    - key: request.auth.claims[custom:tenantid]
+      values: ["${TENANT}"]
+EOF
     
 done
 
@@ -328,7 +272,6 @@ metadata:
   labels:
     istio-injection: enabled
 EOF
-
 
 cat << EOF > kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1

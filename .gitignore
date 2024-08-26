@@ -3,11 +3,11 @@
 *.d.ts
 node_modules
 nodesource_setup.sh
+
 # CDK asset staging directory
 .cdk.staging
 cdk.out
 cdk.context.json
-
 
 deploy-tenant-services.ts
 aws-load-balancer-controller.ts
@@ -18,3 +18,5 @@ istio-*
 policies/yaml_to_json.py
 lib/.DS_Store
 .DS_Store
+
+./infra-cdk/code-build/deploy-tenant-services.sh

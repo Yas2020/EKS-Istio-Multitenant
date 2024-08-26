@@ -1,6 +1,4 @@
-import { Ec2Action } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as eks from 'aws-cdk-lib/aws-eks';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
 
 export interface SystemConfig {
     prefix: string;

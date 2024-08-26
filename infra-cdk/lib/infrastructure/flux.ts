@@ -1,9 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
-import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as eks from 'aws-cdk-lib/aws-eks';
-import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 import { Construct } from "constructs";
 import { SystemConfig } from "./types";
@@ -30,7 +28,7 @@ export class ConfigFlux extends Construct {
     });
     */ 
     
-    const buildSpec1 = codebuild.BuildSpec.fromObject({
+    const buildSpec = codebuild.BuildSpec.fromObject({
       version: "0.2",
       phases: {
         install: {
@@ -53,9 +51,9 @@ export class ConfigFlux extends Construct {
             'curl -s https://fluxcd.io/install.sh | sudo bash',
             'echo "Installing kustomize"',
             'curl --silent --location --remote-name \
-"https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.2.3/kustomize_kustomize.v3.2.3_linux_amd64" && \
-chmod a+x kustomize_kustomize.v3.2.3_linux_amd64 && \
-sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
+ "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.2.3/kustomize_kustomize.v3.2.3_linux_amd64" && \
+ chmod a+x kustomize_kustomize.v3.2.3_linux_amd64 && \
+ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
           ],
         },
         pre_build: {
@@ -78,16 +76,15 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
             'ls ./flux-cd/clusters/dev/',
             'git pull',
             'git add flux-cd',
-            'git commit -m "source repo configured"',
+            'git commit -m "flux bootstrap completed!"',
             'git push'
           ],
         },
       },
     });
 
-    // CodeBuild project
     const project = new codebuild.Project(this, "CodeBuildProject", {
-      buildSpec: buildSpec1,
+      buildSpec: buildSpec,
       source: codebuild.Source.gitHub({
         owner: 'Yas2020',
         repo: 'EKS-Istio-Multitenant',
@@ -129,7 +126,6 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
     });
 
     cluster.awsAuth.addMastersRole(project.role!);
-
     project.addToRolePolicy(new iam.PolicyStatement({
       actions: [
         "cognito-idp:DescribeUserPoolDomain",
@@ -147,5 +143,6 @@ sudo mv kustomize_kustomize.v3.2.3_linux_amd64 /usr/local/bin/kustomize'
       ],
       resources: [cluster.clusterArn],
     }));
+    
   }
 }

@@ -54,7 +54,7 @@ flux create kustomization chatbot \
   --health-check-timeout=3m \
   --export > ./flux-cd/clusters/dev/chatbot-kustomization.yaml
 
-#  Create the manifest for the ImageRepository resource
+# Create the manifest for the ImageRepository resource
 flux create image repository app-ui \
   --image=ghcr.io/yas2020/eks-istio-multitenant/app-ui \
   --interval=1m \
@@ -113,6 +113,7 @@ helm repo add flagger https://flagger.app
 helm repo update
 
 kubectl create ns flagger-system
+kubectl label namespace flagger-system istio-injection=enabled --overwrite
 
 helm upgrade -i flagger flagger/flagger \
   --namespace flagger-system \
